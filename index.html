@@ -997,8 +997,15 @@ border: 2px solid rgba(126,26,31,0.9);
 </style>
 
 
-<style id="mobile-minimal-touch">
+<style id="mobile-safe-styles">
   #c { touch-action: none; }
+  @media (max-width: 820px) and (orientation: portrait){
+    #wrap { 
+      transform: scale(1.2);
+      transform-origin: 50% 0%;
+    }
+    body { overflow: hidden; }
+  }
 </style>
 
 </head>
@@ -2159,66 +2166,38 @@ function seedWorld(){
 </script>
 
 
-<script id="touch-to-keyboard">
+<script id="mobile-touch-controls-final">
 (function(){
   var wrap = document.getElementById('wrap');
-  var canvas = document.getElementById('c');
   var startBtn = document.getElementById('startBtn');
-  if (!wrap || !canvas || !startBtn) return;
-
-  function fire(type, key){
-    var ev;
-    try {
-      ev = new KeyboardEvent(type, {key: key, bubbles:true, cancelable:true});
-    } catch(e){
-      ev = document.createEvent('KeyboardEvent');
-      ev.initKeyboardEvent(type, true, true, window, key, 0, '', false, '');
-    }
-    window.dispatchEvent(ev);
-  }
-
-  var pressed = null;
-  function pickSide(clientX){
-    var rect = canvas.getBoundingClientRect();
-    return (clientX - rect.left) < rect.width*0.5 ? 'ArrowLeft' : 'ArrowRight';
-  }
-  function clientX(e){
-    if (e.touches && e.touches.length) return e.touches[0].clientX;
-    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
-    return e.clientX||0;
-  }
-
-  function down(e){
-    if (e.cancelable) e.preventDefault();
-    var k = pickSide(clientX(e));
-    if (pressed && pressed !== k){ fire('keyup', pressed); pressed=null; }
-    if (!pressed){ fire('keydown', k); pressed = k; }
-  }
-  function move(e){
-    if (!pressed) return;
-    if (e.cancelable) e.preventDefault();
-    var k = pickSide(clientX(e));
-    if (k !== pressed){
-      fire('keyup', pressed);
-      fire('keydown', k);
-      pressed = k;
-    }
-  }
-  function up(e){
-    if (e.cancelable) e.preventDefault();
-    if (pressed){ fire('keyup', pressed); pressed=null; }
-  }
+  if (!wrap || !startBtn) return;
 
   function enable(){
-    if (enable._on) return;
-    enable._on = true;
-    canvas.addEventListener('touchstart', down, {passive:false});
-    canvas.addEventListener('touchmove',  move, {passive:false});
-    canvas.addEventListener('touchend',   up,   {passive:false});
-    canvas.addEventListener('touchcancel',up,   {passive:false});
+    if (enable._on) return; enable._on = true;
+    var active = false;
+    function clientX(e){ 
+      if (e.touches && e.touches.length) return e.touches[0].clientX;
+      if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
+      return e.clientX||0;
+    }
+    function updateDir(x){
+      try{
+        var rect = wrap.getBoundingClientRect();
+        var leftHalf = (x - rect.left) < rect.width*0.5;
+        if (window.input) window.input.dir = leftHalf ? -1 : 1;
+      }catch(_){}
+    }
+    function down(e){ if (e.cancelable) e.preventDefault(); active = true; updateDir(clientX(e)); }
+    function move(e){ if (!active) return; if (e.cancelable) e.preventDefault(); updateDir(clientX(e)); }
+    function up(e){ if (e.cancelable) e.preventDefault(); active = false; if (window.input) window.input.dir = 0; }
+
+    wrap.addEventListener('touchstart', down, {passive:false});
+    wrap.addEventListener('touchmove',  move, {passive:false});
+    wrap.addEventListener('touchend',   up,   {passive:false});
+    wrap.addEventListener('touchcancel',up,   {passive:false});
   }
 
-  // Enable after Start button is pressed
+  // Enable after start button
   var orig = startBtn.onclick;
   startBtn.onclick = function(ev){
     try { orig && orig.call(this, ev); } finally { enable(); }
