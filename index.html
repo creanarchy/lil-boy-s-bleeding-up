@@ -30,7 +30,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lil Boy: Bleeding Up — v0.4.25 (spring rare, spike rare enemies) v0.4.34 (stable FX + camera kick)</title>
 <style>
   :root{ --bg:#1e1119; --bgTop:#2a1822; --red:#c61b37; --red2:#f13a53; --text:#f1ecf2; }
@@ -994,6 +994,11 @@ border: 2px solid rgba(126,26,31,0.9);
 
 /* disable older versions */
 #gameover .card-go::before { content: none !important; }
+</style>
+
+
+<style id="mobile-minimal-touch">
+  #c { touch-action: none; }
 </style>
 
 </head>
@@ -2150,6 +2155,35 @@ function seedWorld(){
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick);
   else tick();
+})();
+</script>
+
+
+<script id="mobile-touch-controls-v2">
+(function(){
+  var wrap = document.getElementById('wrap');
+  if (!wrap) return;
+  if (!window.input) window.input = { dir: 0 };
+
+  var active = false;
+  function getX(e){
+    if (e.touches && e.touches.length) return e.touches[0].clientX;
+    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
+    return e.clientX || 0;
+  }
+  function updateDir(clientX){
+    var rect = wrap.getBoundingClientRect();
+    var x = clientX - rect.left;
+    window.input.dir = (x < rect.width * 0.5) ? -1 : 1;
+  }
+  function down(e){ active = true; if (e.cancelable) e.preventDefault(); updateDir(getX(e)); }
+  function move(e){ if (!active) return; if (e.cancelable) e.preventDefault(); updateDir(getX(e)); }
+  function up(e){ active = false; if (e.cancelable) e.preventDefault(); window.input.dir = 0; }
+
+  wrap.addEventListener('touchstart', down, {passive:false});
+  wrap.addEventListener('touchmove',  move, {passive:false});
+  wrap.addEventListener('touchend',   up,   {passive:false});
+  wrap.addEventListener('touchcancel',up,   {passive:false});
 })();
 </script>
 
