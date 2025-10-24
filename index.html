@@ -2159,31 +2159,43 @@ function seedWorld(){
 </script>
 
 
-<script id="mobile-touch-controls-v2">
+<script id="mobile-touch-controls-v3">
 (function(){
-  var wrap = document.getElementById('wrap');
-  if (!wrap) return;
+  var canvas = document.getElementById('c');
+  var startBtn = document.getElementById('startBtn');
+  if (!canvas || !startBtn) return;
   if (!window.input) window.input = { dir: 0 };
 
-  var active = false;
-  function getX(e){
-    if (e.touches && e.touches.length) return e.touches[0].clientX;
-    if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
-    return e.clientX || 0;
-  }
-  function updateDir(clientX){
-    var rect = wrap.getBoundingClientRect();
-    var x = clientX - rect.left;
-    window.input.dir = (x < rect.width * 0.5) ? -1 : 1;
-  }
-  function down(e){ active = true; if (e.cancelable) e.preventDefault(); updateDir(getX(e)); }
-  function move(e){ if (!active) return; if (e.cancelable) e.preventDefault(); updateDir(getX(e)); }
-  function up(e){ active = false; if (e.cancelable) e.preventDefault(); window.input.dir = 0; }
+  function enableTouchControls(){
+    if (enableTouchControls._enabled) return;
+    enableTouchControls._enabled = true;
 
-  wrap.addEventListener('touchstart', down, {passive:false});
-  wrap.addEventListener('touchmove',  move, {passive:false});
-  wrap.addEventListener('touchend',   up,   {passive:false});
-  wrap.addEventListener('touchcancel',up,   {passive:false});
+    var active = false;
+    function x(e){
+      if (e.touches && e.touches.length) return e.touches[0].clientX;
+      if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
+      return e.clientX || 0;
+    }
+    function updateDir(clientX){
+      var rect = canvas.getBoundingClientRect();
+      var relX = clientX - rect.left;
+      window.input.dir = (relX < rect.width * 0.5) ? -1 : 1;
+    }
+    function down(e){ if (e.cancelable) e.preventDefault(); active = true; updateDir(x(e)); }
+    function move(e){ if (!active) return; if (e.cancelable) e.preventDefault(); updateDir(x(e)); }
+    function up(e){ if (e.cancelable) e.preventDefault(); active = false; window.input.dir = 0; }
+
+    canvas.addEventListener('touchstart', down, {passive:false});
+    canvas.addEventListener('touchmove',  move, {passive:false});
+    canvas.addEventListener('touchend',   up,   {passive:false});
+    canvas.addEventListener('touchcancel',up,   {passive:false});
+  }
+
+  // Wrap Start button to enable controls AFTER game starts
+  var orig = startBtn.onclick;
+  startBtn.onclick = function(ev){
+    try { orig && orig.call(this, ev); } finally { enableTouchControls(); }
+  };
 })();
 </script>
 
