@@ -1313,6 +1313,7 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
 
   // Input
   const input={dir:0};
+  window.input = input; // expose to touch controls
   window.addEventListener('keydown',e=>{
     if(e.key==='ArrowLeft'||e.key==='a') input.dir=-1;
     if(e.key==='ArrowRight'||e.key==='d') input.dir=1;
