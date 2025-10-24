@@ -1135,9 +1135,7 @@ function solidCapsReady(){ return false; }
     return Math.max(8, Math.round(w0 * s));
   }
   ctx.imageSmoothingEnabled = false;
-  const IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent) || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
-const DPR_BASE  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-const DPR       = IS_MOBILE ? Math.min(1.5, DPR_BASE) : DPR_BASE;
+  const DPR  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
   let W=0, H=0;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
