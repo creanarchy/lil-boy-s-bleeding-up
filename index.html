@@ -997,15 +997,8 @@ border: 2px solid rgba(126,26,31,0.9);
 </style>
 
 
-<style id="mobile-safe-styles">
-  #c { touch-action: none; }
-  @media (max-width: 820px) and (orientation: portrait){
-    #wrap { 
-      transform: scale(1.2);
-      transform-origin: 50% 0%;
-    }
-    body { overflow: hidden; }
-  }
+<style id="touch-guard-style">
+  #c { touch-action: none; -webkit-touch-callout: none; }
 </style>
 
 </head>
@@ -2166,42 +2159,46 @@ function seedWorld(){
 </script>
 
 
-<script id="mobile-touch-controls-final">
+<script id="touch-move-controls">
 (function(){
-  var wrap = document.getElementById('wrap');
-  var startBtn = document.getElementById('startBtn');
-  if (!wrap || !startBtn) return;
+  var canvas = document.getElementById('c');
+  if (!canvas) return;
 
-  function enable(){
-    if (enable._on) return; enable._on = true;
-    var active = false;
-    function clientX(e){ 
-      if (e.touches && e.touches.length) return e.touches[0].clientX;
-      if (e.changedTouches && e.changedTouches.length) return e.changedTouches[0].clientX;
-      return e.clientX||0;
-    }
-    function updateDir(x){
-      try{
-        var rect = wrap.getBoundingClientRect();
-        var leftHalf = (x - rect.left) < rect.width*0.5;
-        if (window.input) window.input.dir = leftHalf ? -1 : 1;
-      }catch(_){}
-    }
-    function down(e){ if (e.cancelable) e.preventDefault(); active = true; updateDir(clientX(e)); }
-    function move(e){ if (!active) return; if (e.cancelable) e.preventDefault(); updateDir(clientX(e)); }
-    function up(e){ if (e.cancelable) e.preventDefault(); active = false; if (window.input) window.input.dir = 0; }
+  // Fallback input object if code expects it.
+  if (!window.input) window.input = { dir: 0 };
 
-    wrap.addEventListener('touchstart', down, {passive:false});
-    wrap.addEventListener('touchmove',  move, {passive:false});
-    wrap.addEventListener('touchend',   up,   {passive:false});
-    wrap.addEventListener('touchcancel',up,   {passive:false});
+  function sideFromEvent(e){
+    var t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+    var cx = (t ? t.clientX : (e.clientX||0));
+    var rect = canvas.getBoundingClientRect();
+    var x = cx - rect.left;
+    return (x < rect.width * 0.5) ? -1 : 1;
   }
 
-  // Enable after start button
-  var orig = startBtn.onclick;
-  startBtn.onclick = function(ev){
-    try { orig && orig.call(this, ev); } finally { enable(); }
-  };
+  var active = false;
+
+  function onStart(e){
+    if (e.cancelable) e.preventDefault();
+    try{ if (typeof state !== 'undefined' && typeof STATE !== 'undefined' && state !== STATE.PLAY) return; }catch(_){}
+    active = true;
+    window.input.dir = sideFromEvent(e);
+  }
+  function onMove(e){
+    if (!active) return;
+    if (e.cancelable) e.preventDefault();
+    try{ if (typeof state !== 'undefined' && typeof STATE !== 'undefined' && state !== STATE.PLAY) return; }catch(_){}
+    window.input.dir = sideFromEvent(e);
+  }
+  function onEnd(e){
+    if (e.cancelable) e.preventDefault();
+    active = false;
+    window.input.dir = 0;
+  }
+
+  canvas.addEventListener('touchstart', onStart, {passive:false});
+  canvas.addEventListener('touchmove',  onMove,  {passive:false});
+  canvas.addEventListener('touchend',   onEnd,   {passive:false});
+  canvas.addEventListener('touchcancel',onEnd,   {passive:false});
 })();
 </script>
 
