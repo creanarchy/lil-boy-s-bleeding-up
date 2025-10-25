@@ -1234,7 +1234,7 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
   function addDropOnPlatform(p, offsetX=0, lift=28){
   const rBase = 18;
   const r = Math.round(rBase * (IS_MOBILE ? MOBILE_GEOM_SCALE : 1));
-  const liftAdj = IS_MOBILE ? (lift+2) : lift;
+  const liftAdj = IS_MOBILE ? (lift+4) : lift;
   const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r: r, parent: p, offsetX, lift };
   drops.push(d);
   return d;
@@ -1653,7 +1653,12 @@ function seedWorld(){
         for(let i=0;i<teeth;i++){ const tx=p.x+i*tw, ty=p.y-th; ctx.beginPath(); ctx.moveTo(tx,ty+th); ctx.lineTo(tx+tw*0.5,ty); ctx.lineTo(tx+tw,ty+th); ctx.closePath(); ctx.fillStyle='rgba(241,58,83,0.95)'; ctx.fill(); }
       }
       ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
-      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} const _vis = MOBILE_VISUAL_SCALE; const wVis = Math.round(p.w*_vis), hVis = Math.round(p.h*_vis); const xVis = Math.round(p.x + (p.w - wVis)/2), yVis = Math.round(p.y + (p.h - hVis)/2); ctx.drawImage(t, xVis, yVis, wVis, hVis); } }
+      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} const _vis = MOBILE_VISUAL_SCALE;
+const wVis = Math.round(p.w * _vis), hVis = Math.round(p.h * _vis);
+const xVis = Math.round(p.x + (p.w - wVis) / 2);
+// anchor top to p.y so drops still hover above
+const yVis = (hVis >= p.h) ? Math.round(p.y) : Math.round(p.y + (p.h - hVis) / 2);
+ctx.drawImage(t, xVis, yVis, wVis, hVis); } }
       ctx.restore();
     });
 
