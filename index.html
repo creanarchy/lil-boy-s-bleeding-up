@@ -1223,7 +1223,7 @@ function drawSolidCaps(ctx, p){
   const dw = Math.round(iw*sc), dh = Math.round(p.h);
   const cx = p.x + p.w/2, dx = Math.round(cx - dw/2);
 
-  const _vis = MOBILE_VISUAL_SCALE; const dwVis = Math.round(dw*_vis), dhVis = Math.round(dh*_vis); const dxVis = Math.round(cx - dwVis/2); ctx.drawImage(im,0,0,iw,ih, px(dxVis), px(p.y), px(dwVis), px(dhVis)); /* keep world size */ p.x = dxVis; return true; }
+  const _vis = MOBILE_VISUAL_SCALE; const dwVis = Math.round(dw*_vis), dhVis = Math.round(dh*_vis); const dxVis = Math.round(cx - dwVis/2); ctx.drawImage(im,0,0,iw,ih, px(dxVis), px(p.y), px(dwVis), px(dhVis)); return true; }
 
 let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
 
