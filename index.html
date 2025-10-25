@@ -1129,11 +1129,11 @@ function solidCapsReady(){ return false; }
   // Visual heights and width-from-aspect helper for non-solid
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
   const VHEIGHT_SCALED = IS_MOBILE ? {
-    solid: Math.round(38 * MOBILE_SCALE),
-    fragile: Math.round(32 * MOBILE_SCALE),
-    moving: Math.round(36 * MOBILE_SCALE),
-    spring: Math.round(36 * MOBILE_SCALE),
-    spike: Math.round(46 * MOBILE_SCALE)
+    solid: Math.round(38 * MOBILE_GEOM_SCALE),
+    fragile: Math.round(32 * MOBILE_GEOM_SCALE),
+    moving: Math.round(36 * MOBILE_GEOM_SCALE),
+    spring: Math.round(36 * MOBILE_GEOM_SCALE),
+    spike: Math.round(46 * MOBILE_GEOM_SCALE)
   } : { solid:38, fragile:32, moving:36, spring:36, spike:46 };
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
@@ -1146,6 +1146,7 @@ function solidCapsReady(){ return false; }
   var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
   var MOBILE_SCALE = IS_MOBILE ? 1.15 : 1.0;
+  const MOBILE_GEOM_SCALE = IS_MOBILE ? (1 + 0.25*(DPR-1)) : 1;
   let W=0, H=0;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
@@ -1229,9 +1230,14 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
     const p={x:cx-w/2,y,w,h,type,ttl:Infinity,touched:false,shake:0,vx:vx,alive:true};
     platforms.push(p); return p;
   }
-  function addDropOnPlatform(p, offsetX=0, lift=28){ const rMobile = IS_MOBILE ? 21 : 18; const liftAdj = IS_MOBILE ? (lift+2) : lift; const d={x:p.x + p.w/2 + offsetX, y:p.y - liftAdj, r:rMobile, parent:p, offsetX, lift};
-    drops.push(d); return d;
-  }
+  function addDropOnPlatform(p, offsetX=0, lift=28){
+  const rBase = 18;
+  const r = Math.round(rBase * (IS_MOBILE ? MOBILE_GEOM_SCALE : 1));
+  const liftAdj = IS_MOBILE ? (lift+2) : lift;
+  const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r: r, parent: p, offsetX, lift };
+  drops.push(d);
+  return d;
+}
 
   function diffT(n){ return clamp((n-6)/70, 0, 1); }
 
