@@ -1,3 +1,31 @@
+
+
+  // === Solid platform fixed-width sprites (guarded) ===
+  if (typeof SOLID_SPRITES === 'undefined') {
+    const imgSolid1 = makeImg("./assets/images/platforms/platform_solid1.png");
+    const imgSolid2 = makeImg("./assets/images/platforms/platform_solid2.png");
+    const imgSolid3 = makeImg("./assets/images/platforms/platform_solid3.png");
+    const imgSolid4 = makeImg("./assets/images/platforms/platform_solid4.png");
+    const imgSolid5 = makeImg("./assets/images/platforms/platform_solid5.png");
+    const imgSolid6 = makeImg("./assets/images/platforms/platform_solid6.png");
+    const imgSolid7 = makeImg("./assets/images/platforms/platform_solid7.png");
+    const imgSolid8 = makeImg("./assets/images/platforms/platform_solid8.png");
+    var SOLID_SPRITES = [imgSolid1,imgSolid2,imgSolid3,imgSolid4,imgSolid5,imgSolid6,imgSolid7,imgSolid8];
+  }
+  if (typeof solidSpriteChoice !== 'function') {
+    function /*removed_solidSpriteChoice*/0{
+      let bestIdx = -1, bestW = desiredW, bestDiff = Infinity;
+      for (let i=0;i<SOLID_SPRITES.length;i++){
+        const im = SOLID_SPRITES[i];
+        if (!imgReady(im)) continue;
+        const scale = hh / ((im.naturalHeight||im.height)||1);
+        const wPix  = Math.round(((im.naturalWidth||im.width)||1) * scale);
+        const d = Math.abs(wPix - desiredW);
+        if (d < bestDiff){ bestDiff = d; bestIdx = i; bestW = wPix; }
+      }
+      return { idx: bestIdx, w: bestW, ready: bestIdx>=0 };
+    }
+  }
 <!doctype html>
 <html lang="ru">
 <head>
@@ -1100,10 +1128,16 @@ function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width
 function solidCapsReady(){ return false; }
   // === Mobile visual-only scale (physics unchanged) ===
   // Do NOT redeclare DPR/IS_MOBILE; compute locally and keep only the scale as a const
-  const MOBILE_VISUAL_SCALE = 1;
+  const MOBILE_VISUAL_SCALE = (function(){
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  const isMobile = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && dpr >= 2)
+    || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
+  return isMobile ? 1.18 : 1.0;
+})();
 // Visual heights and width-from-aspect helper for non-solid
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
-  const VHEIGHT_SCALED = VHEIGHT;
+  const VHEIGHT_SCALED = IS_MOBILE ? VHEIGHT : VHEIGHT;
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
     const w0 = (img.naturalWidth||img.width)||1;
@@ -1197,11 +1231,15 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
     const p={x:cx-w/2,y,w,h,type,ttl:Infinity,touched:false,shake:0,vx:vx,alive:true};
     platforms.push(p); return p;
   }
-  function addDropOnPlatform(p, offsetX=0, lift=28){ const d={x:p.x + p.w/2 + offsetX, y:p.y - lift, r:18, parent:p, offsetX, lift}
-;
+  function addDropOnPlatform(p, offsetX=0, lift=28){
+  const rBase = 18;
+  const r = Math.round(rBase * (IS_MOBILE ? MOBILE_GEOM_SCALE : 1));
+  const liftAdj = IS_MOBILE ? (lift+2) : lift;
+  const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r: r, parent: p, offsetX, lift };
   drops.push(d);
   return d;
 }
+
 function diffT(n){ return clamp((n-6)/70, 0, 1); }
 
   function genRing(seed, n, prevTopY, lastX){
@@ -1615,7 +1653,7 @@ function seedWorld(){
         for(let i=0;i<teeth;i++){ const tx=p.x+i*tw, ty=p.y-th; ctx.beginPath(); ctx.moveTo(tx,ty+th); ctx.lineTo(tx+tw*0.5,ty); ctx.lineTo(tx+tw,ty+th); ctx.closePath(); ctx.fillStyle='rgba(241,58,83,0.95)'; ctx.fill(); }
       }
       ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
-      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} const _vis = MOBILE_VISUAL_SCALE; const wVis = Math.round(p.w*_vis), hVis = Math.round(p.h*_vis); const xVis = Math.round(p.x + (p.w - wVis)/2), yVis = Math.round(p.y); ctx.drawImage(t, xVis, yVis, wVis, hVis); } }
+      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} const _vis = MOBILE_VISUAL_SCALE; const wVis = Math.round(p.w*_vis), hVis = Math.round(p.h*_vis); const xVis = Math.round(p.x + (p.w - wVis)/2), yVis = Math.round(p.y + (p.h - hVis)/2); ctx.drawImage(t, xVis, yVis, wVis, hVis); } }
       ctx.restore();
     });
 
@@ -2174,6 +2212,66 @@ function seedWorld(){
   canvas.addEventListener('touchmove',  onMove,  {passive:false});
   canvas.addEventListener('touchend',   onEnd,   {passive:false});
   canvas.addEventListener('touchcancel',onEnd,   {passive:false});
+})();
+</script>
+
+
+<script>
+// Targeted visual-only scale for platforms & drops on phones; physics untouched.
+// No edits to game logic; we intercept only drawImage for specific textures.
+(function(){
+  const SCALE = 1.18;
+  const isMobile = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+                || (Math.min(window.innerWidth, window.innerHeight) <= 820 && (window.devicePixelRatio||1) >= 2);
+
+  function needScale(img){
+    try { return /fragile|moving|spring|spike|solid|drop/i.test((img && img.src) || ''); }
+    catch(e){ return false; }
+  }
+
+  function tryPatch(){
+    // Prefer the 2D context already used by the game if exposed
+    let ctx = window.ctx || null;
+    if (!ctx) {
+      const cv = document.querySelector('canvas');
+      if (cv && cv.getContext) ctx = cv.getContext('2d');
+    }
+    if (!ctx || !isMobile) return false;
+    if (ctx.__drawImagePatched) return true;
+
+    const _drawImage = ctx.drawImage.bind(ctx);
+    ctx.drawImage = function(img, ...rest){
+      if (!needScale(img)) return _drawImage(img, ...rest);
+
+      if (rest.length === 8) {
+        // 9-arg form
+        let [sx, sy, sw, sh, dx, dy, dw, dh] = rest;
+        const dw2 = Math.round(dw * SCALE);
+        const dh2 = Math.round(dh * SCALE);
+        const dx2 = Math.round(dx + (dw - dw2) / 2); // center horizontally
+        const dy2 = Math.round(dy);                   // anchor top to preserve gap above
+        return _drawImage(img, sx, sy, sw, sh, dx2, dy2, dw2, dh2);
+      } else if (rest.length === 4) {
+        // 5-arg form
+        let [dx, dy, dw, dh] = rest;
+        const dw2 = Math.round(dw * SCALE);
+        const dh2 = Math.round(dh * SCALE);
+        const dx2 = Math.round(dx + (dw - dw2) / 2);
+        const dy2 = Math.round(dy);
+        return _drawImage(img, dx2, dy2, dw2, dh2);
+      } else {
+        return _drawImage(img, ...rest);
+      }
+    };
+    ctx.__drawImagePatched = true;
+    return true;
+  }
+
+  const t0 = performance.now();
+  (function loop(){
+    if (tryPatch()) return;
+    if (performance.now() - t0 < 4000) requestAnimationFrame(loop);
+  })();
 })();
 </script>
 
