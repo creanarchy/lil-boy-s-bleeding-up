@@ -1,31 +1,3 @@
-
-
-  // === Solid platform fixed-width sprites (guarded) ===
-  if (typeof SOLID_SPRITES === 'undefined') {
-    const imgSolid1 = makeImg("./assets/images/platforms/platform_solid1.png");
-    const imgSolid2 = makeImg("./assets/images/platforms/platform_solid2.png");
-    const imgSolid3 = makeImg("./assets/images/platforms/platform_solid3.png");
-    const imgSolid4 = makeImg("./assets/images/platforms/platform_solid4.png");
-    const imgSolid5 = makeImg("./assets/images/platforms/platform_solid5.png");
-    const imgSolid6 = makeImg("./assets/images/platforms/platform_solid6.png");
-    const imgSolid7 = makeImg("./assets/images/platforms/platform_solid7.png");
-    const imgSolid8 = makeImg("./assets/images/platforms/platform_solid8.png");
-    var SOLID_SPRITES = [imgSolid1,imgSolid2,imgSolid3,imgSolid4,imgSolid5,imgSolid6,imgSolid7,imgSolid8];
-  }
-  if (typeof solidSpriteChoice !== 'function') {
-    function /*removed_solidSpriteChoice*/0{
-      let bestIdx = -1, bestW = desiredW, bestDiff = Infinity;
-      for (let i=0;i<SOLID_SPRITES.length;i++){
-        const im = SOLID_SPRITES[i];
-        if (!imgReady(im)) continue;
-        const scale = hh / ((im.naturalHeight||im.height)||1);
-        const wPix  = Math.round(((im.naturalWidth||im.width)||1) * scale);
-        const d = Math.abs(wPix - desiredW);
-        if (d < bestDiff){ bestDiff = d; bestIdx = i; bestW = wPix; }
-      }
-      return { idx: bestIdx, w: bestW, ready: bestIdx>=0 };
-    }
-  }
 <!doctype html>
 <html lang="ru">
 <head>
@@ -1127,25 +1099,31 @@ function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width
   }
 function solidCapsReady(){ return false; }
   // Visual heights and width-from-aspect helper for non-solid
+  // Robust mobile detection (doesn't rely on IS_MOBILE declared later)
+  const __DPR0 = Math.max(1, Math.min(3, window.devicePixelRatio||1));
+  const __MOBILE_GUESS0 = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR0 >= 2)
+    || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
+  const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
-  const VHEIGHT_SCALED = IS_MOBILE ? {
-  solid: Math.round(38 * MOBILE_GEOM_SCALE),
-  fragile: Math.round(32 * MOBILE_GEOM_SCALE),
-  moving:  Math.round(36 * MOBILE_GEOM_SCALE),
-  spring:  Math.round(36 * MOBILE_GEOM_SCALE),
-  spike:   Math.round(46 * MOBILE_GEOM_SCALE)
-} : { solid:38, fragile:32, moving:36, spring:36, spike:46 };
+  const VHEIGHT_SCALED = {
+    solid: Math.round(VHEIGHT.solid  * MOBILE_GEOM_SCALE),
+    fragile: Math.round(VHEIGHT.fragile* MOBILE_GEOM_SCALE),
+    moving:  Math.round(VHEIGHT.moving * MOBILE_GEOM_SCALE),
+    spring:  Math.round(VHEIGHT.spring * MOBILE_GEOM_SCALE),
+    spike:   Math.round(VHEIGHT.spike  * MOBILE_GEOM_SCALE)
+  };
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
     const w0 = (img.naturalWidth||img.width)||1;
     const s = targetH / h0;
     return Math.max(8, Math.round(w0 * s));
   }
-  ctx.imageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled = false;
   const DPR  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
   var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
-  var MOBILE_SCALE = IS_MOBILE ? 1.50 : 1.0;
+  var MOBILE_SCALE = IS_MOBILE ? 1.0 : 1.0;
   let W=0, H=0;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
@@ -1176,14 +1154,6 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
   const platforms=[]; const drops=[];
   let SPACING = 0; let cameraY = 0; let hitTimer=0; let camKick=0;
-// --- Mobile geometry scale (keeps physics proportional) ---
-const __DPR = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-const __MOBILE_GUESS = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-  || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR >= 2)
-  || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
-// Use existing IS_MOBILE if it is true, OR our guess; never block on a false IS_MOBILE
-const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.50 : 1.0;
-
 // FX: drop particles only
   const sparks=[]; const bloodFX=[];
 
@@ -1560,9 +1530,9 @@ function seedWorld(){
 
     // Squash/stretch
     let targetSy = 1, targetSx = 1;
-    if (player.vy < -80){ targetSy = 1.50; targetSx = 0.90; }
-    else if (player.vy > 80){ targetSy = 0.92; targetSx = 1.50; }
-    if (landed){ targetSy = 1.50; targetSx = 0.90; player.landBounce = 1.0; }
+    if (player.vy < -80){ targetSy = 1.22; targetSx = 0.92; }
+    else if (player.vy > 80){ targetSy = 0.94; targetSx = 1.18; }
+    if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
       const osc = Math.sin((1-t)*Math.PI*1.2) * (t*0.12);
