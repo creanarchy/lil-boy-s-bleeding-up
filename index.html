@@ -1178,12 +1178,12 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   let SPACING = 0; let cameraY = 0; let hitTimer=0; let camKick=0;
 // --- Mobile geometry scale (keeps physics proportional) ---
 const __DPR = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-// Reuse existing IS_MOBILE if present; otherwise detect
-const MOBILE_GEOM_SCALE = (typeof IS_MOBILE !== 'undefined'
-  ? (IS_MOBILE ? 1.18 : 1.0)
-  : (((window.matchMedia && matchMedia('(pointer:coarse)').matches)
-      || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR >= 2)
-      || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)) ? 1.18 : 1.0));
+const __MOBILE_GUESS = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+  || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR >= 2)
+  || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
+// Use existing IS_MOBILE if it is true, OR our guess; never block on a false IS_MOBILE
+const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.18 : 1.0;
+
 // FX: drop particles only
   const sparks=[]; const bloodFX=[];
 
