@@ -1449,7 +1449,7 @@ function seedWorld(){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = 0.19*H * MOBILE_GEOM_SCALE;
+    SPACING = (IS_MOBILE ? 0.26*H : 0.19*H);
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
