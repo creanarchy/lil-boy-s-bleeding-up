@@ -1419,7 +1419,7 @@ function seedWorld(){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.33*H * MOBILE_GEOM_SCALE : 0.19*H);
+    SPACING = (IS_MOBILE ? 0.36*H : 0.19*H);  // +10% spacing on mobile
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
