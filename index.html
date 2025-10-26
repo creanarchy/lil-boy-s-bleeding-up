@@ -226,7 +226,7 @@
 /* --- FX v2: brighter colors, clearer pulses, longer low warning --- */
 @keyframes barPulseCollectV2 {
   0%   { transform: scaleY(1);    filter: brightness(1) saturate(1); }
-  45%  { transform: scaleY(1.18); filter: brightness(1.35) saturate(1.25); }
+  45%  { transform: scaleY(1.30); filter: brightness(1.35) saturate(1.25); }
   100% { transform: scaleY(1);    filter: brightness(1) saturate(1); }
 }
 @keyframes barPulseDamageV2 {
@@ -292,7 +292,7 @@
 <style id="bar-pulses">
 @keyframes barPulseCollect {
   0%   { transform: scaleY(1);    filter: brightness(1) saturate(1); }
-  45%  { transform: scaleY(1.12); filter: brightness(1.25) saturate(1.18); }
+  45%  { transform: scaleY(1.12); filter: brightness(1.25) saturate(1.30); }
   100% { transform: scaleY(1);    filter: brightness(1) saturate(1); }
 }
 @keyframes barPulseDamage {
@@ -1182,7 +1182,7 @@ const __MOBILE_GUESS = (window.matchMedia && matchMedia('(pointer:coarse)').matc
   || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR >= 2)
   || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
 // Use existing IS_MOBILE if it is true, OR our guess; never block on a false IS_MOBILE
-const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.18 : 1.0;
+const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.30 : 1.0;
 
 // FX: drop particles only
   const sparks=[]; const bloodFX=[];
