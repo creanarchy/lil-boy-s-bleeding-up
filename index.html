@@ -99,7 +99,7 @@
     inset 0 2px 6px rgba(255,255,255,.25),
     inset 0 -3px 6px rgba(0,0,0,.45),
     0 0 10px rgba(241,58,83,.35);
-  filter:saturate(1.08);
+  filter:saturate(1.50);
 }
 .bar .fill::after{
   content:""; position:absolute; left:6px; right:6px; top:4px; height:38%;
@@ -192,7 +192,7 @@
 /* --- FX: pulses & dynamic color (non-destructive) --- */
 @keyframes barPulseCollect {
   0%   { transform: scaleY(1);    filter: brightness(1); }
-  40%  { transform: scaleY(1.12); filter: brightness(1.3); }
+  40%  { transform: scaleY(1.50); filter: brightness(1.3); }
   100% { transform: scaleY(1);    filter: brightness(1); }
 }
 @keyframes barPulseDamage {
@@ -205,7 +205,7 @@
 }
 @keyframes barLowBreath {
   0%   { transform: scaleY(1);    filter: saturate(1) brightness(1); }
-  50%  { transform: scaleY(1.10); filter: saturate(1.2) brightness(1.2); }
+  50%  { transform: scaleY(1.50); filter: saturate(1.2) brightness(1.2); }
   100% { transform: scaleY(1);    filter: saturate(1) brightness(1); }
 }
 
@@ -226,7 +226,7 @@
 /* --- FX v2: brighter colors, clearer pulses, longer low warning --- */
 @keyframes barPulseCollectV2 {
   0%   { transform: scaleY(1);    filter: brightness(1) saturate(1); }
-  45%  { transform: scaleY(1.30); filter: brightness(1.35) saturate(1.25); }
+  45%  { transform: scaleY(1.50); filter: brightness(1.50) saturate(1.50); }
   100% { transform: scaleY(1);    filter: brightness(1) saturate(1); }
 }
 @keyframes barPulseDamageV2 {
@@ -239,7 +239,7 @@
 }
 @keyframes barLowBreathV2 {
   0%   { transform: scaleY(1);    filter: saturate(1) brightness(1); }
-  50%  { transform: scaleY(1.15); filter: saturate(1.25) brightness(1.25); }
+  50%  { transform: scaleY(1.50); filter: saturate(1.50) brightness(1.50); }
   100% { transform: scaleY(1);    filter: saturate(1) brightness(1); }
 }
 
@@ -292,7 +292,7 @@
 <style id="bar-pulses">
 @keyframes barPulseCollect {
   0%   { transform: scaleY(1);    filter: brightness(1) saturate(1); }
-  45%  { transform: scaleY(1.12); filter: brightness(1.25) saturate(1.30); }
+  45%  { transform: scaleY(1.50); filter: brightness(1.50) saturate(1.50); }
   100% { transform: scaleY(1);    filter: brightness(1) saturate(1); }
 }
 @keyframes barPulseDamage {
@@ -415,7 +415,7 @@
   padding: 7px 9px !important; /* ~+15% */
   border-radius: 14px !important;
   gap: 9px !important;
-  font-size: clamp(13.8px, 1.84vh, 20.7px) !important;
+  font-size: clamp(13.8px, 1.50vh, 20.7px) !important;
 }
 </style>
 
@@ -426,7 +426,7 @@
   padding: 8px 10px !important;
   border-radius: 15px !important;
   gap: 10px !important;
-  font-size: clamp(14.5px, 1.95vh, 21.8px) !important;
+  font-size: clamp(14.5px, 1.50vh, 21.8px) !important;
 
   /* thicker bezel with steel look */
   border: 2px solid rgba(220,228,236,0.18) !important;
@@ -585,7 +585,7 @@
   font-weight: 900;
   font-size: clamp(28px, 5.2vw, 48px);
   letter-spacing: 0.06em;
-  line-height: 1.05;
+  line-height: 1.50;
   color: #f3eef4;
   text-shadow: 0 2px 0 rgba(0,0,0,.6), 0 16px 40px rgba(0,0,0,.6);
 }
@@ -600,7 +600,7 @@
   transition: transform 120ms ease, filter 120ms ease, box-shadow 120ms ease;
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
-#menu .onebtn button:hover{ transform: translateY(-2px); filter: brightness(1.06); }
+#menu .onebtn button:hover{ transform: translateY(-2px); filter: brightness(1.50); }
 #menu .onebtn button:active{ transform: translateY(0); filter: brightness(0.96); }
 </style>
 <style id='start-window-polish-v2'>
@@ -628,7 +628,7 @@
   font-weight: 900;
   font-size: clamp(24px, 4.4vw, 40px); /* меньше и плотнее */
   letter-spacing: 0.06em;
-  line-height: 1.04;
+  line-height: 1.50;
   color: #f3eef4;
   text-align:center;
   /* чёрная обводка + мягкая тень */
@@ -669,7 +669,7 @@
 }
 #menu .onebtn #startBtn:hover{
   transform: translateY(-2px);
-  filter: brightness(1.06);
+  filter: brightness(1.50);
   box-shadow:
     0 12px 32px rgba(0,0,0,.5),
     inset 0 1px 0 rgba(255,255,255,.42),
@@ -718,7 +718,7 @@
 }
 #menu .start-cta:hover{
   transform: translateY(-2px);
-  filter: brightness(1.06);
+  filter: brightness(1.50);
   box-shadow:
     0 12px 32px rgba(0,0,0,.5),
     inset 0 1px 0 rgba(255,255,255,.5),
@@ -727,7 +727,7 @@
 #menu .start-cta:active{ transform: translateY(0); filter: brightness(0.96); }
 #menu .start-cta:hover{
   transform: translateY(-2px);
-  filter: brightness(1.06);
+  filter: brightness(1.50);
   box-shadow:
     0 12px 32px rgba(0,0,0,.5),
     inset 0 1px 0 rgba(255,255,255,.42),
@@ -790,7 +790,7 @@ border: 2px solid rgba(126,26,31,0.9);
 }
 #gameover .cta-chrome:hover{
   transform: translateY(-2px);
-  filter: brightness(1.06);
+  filter: brightness(1.50);
   box-shadow:
     0 12px 32px rgba(0,0,0,.5),
     inset 0 1px 0 rgba(255,255,255,.45),
@@ -1145,7 +1145,7 @@ function solidCapsReady(){ return false; }
   const DPR  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
   var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
-  var MOBILE_SCALE = IS_MOBILE ? 1.15 : 1.0;
+  var MOBILE_SCALE = IS_MOBILE ? 1.50 : 1.0;
   let W=0, H=0;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
@@ -1182,7 +1182,7 @@ const __MOBILE_GUESS = (window.matchMedia && matchMedia('(pointer:coarse)').matc
   || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR >= 2)
   || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
 // Use existing IS_MOBILE if it is true, OR our guess; never block on a false IS_MOBILE
-const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.30 : 1.0;
+const MOBILE_GEOM_SCALE = (((typeof IS_MOBILE!=='undefined') ? !!IS_MOBILE : false) || __MOBILE_GUESS) ? 1.50 : 1.0;
 
 // FX: drop particles only
   const sparks=[]; const bloodFX=[];
@@ -1251,7 +1251,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const stepY   = Math.min(SPACING, REACH_Y);
     const y       = prevTopY - stepY;
 
-    const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.10, t);
+    const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
     const side    = (n&1)?1:-1;
     const dx      = (0.35 + r(1)*0.5) * MAX_DX * dxScale * side;
     const cx      = clamp(lastX + dx, 0.02*W, 0.98*W);
@@ -1560,9 +1560,9 @@ function seedWorld(){
 
     // Squash/stretch
     let targetSy = 1, targetSx = 1;
-    if (player.vy < -80){ targetSy = 1.12; targetSx = 0.90; }
-    else if (player.vy > 80){ targetSy = 0.92; targetSx = 1.06; }
-    if (landed){ targetSy = 1.16; targetSx = 0.90; player.landBounce = 1.0; }
+    if (player.vy < -80){ targetSy = 1.50; targetSx = 0.90; }
+    else if (player.vy > 80){ targetSy = 0.92; targetSx = 1.50; }
+    if (landed){ targetSy = 1.50; targetSx = 0.90; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
       const osc = Math.sin((1-t)*Math.PI*1.2) * (t*0.12);
