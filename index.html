@@ -1126,18 +1126,9 @@ function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width
     ctx.globalAlpha = 1;
   }
 function solidCapsReady(){ return false; }
-  // === Mobile visual-only scale (physics unchanged) ===
-  // Do NOT redeclare DPR/IS_MOBILE; compute locally and keep only the scale as a const
-  const MOBILE_VISUAL_SCALE = (function(){
-  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
-  const isMobile = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && dpr >= 2)
-    || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
-  return isMobile ? 1.18 : 1.0;
-})();
-// Visual heights and width-from-aspect helper for non-solid
+  // Visual heights and width-from-aspect helper for non-solid
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
-  const VHEIGHT_SCALED = IS_MOBILE ? VHEIGHT : VHEIGHT;
+/* VHEIGHT_SCALED will be defined after DPR/IS_MOBILE init for consistent DPR scaling */
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
     const w0 = (img.naturalWidth||img.width)||1;
@@ -1146,11 +1137,21 @@ function solidCapsReady(){ return false; }
   }
   ctx.imageSmoothingEnabled = false;
   const DPR  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-  var IS_MOBILE = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-                 || (Math.min(window.innerWidth, window.innerHeight) < 820 && DPR >= 2)
-                 || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
+  var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
+                    || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
   var MOBILE_SCALE = IS_MOBILE ? 1.15 : 1.0;
-const MOBILE_GEOM_SCALE = IS_MOBILE ? (1 + 0.22*(DPR-1)) : 1;
+  // === DPR-aware visual heights (replaces early stub) ===
+  const VHEIGHT_SCALED = (() => {
+    const s = (IS_MOBILE ? MOBILE_SCALE : 1) * DPR;
+    return {
+      solid: Math.round(VHEIGHT.solid   * s),
+      fragile: Math.round(VHEIGHT.fragile * s),
+      moving: Math.round(VHEIGHT.moving  * s),
+      spring: Math.round(VHEIGHT.spring  * s),
+      spike:  Math.round(VHEIGHT.spike   * s)
+    };
+  })();
+
   let W=0, H=0;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
@@ -1186,7 +1187,12 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   const sparks=[]; const bloodFX=[];
 
   // RNG
-  function mulberry32(a){ return function(){ let t=a+=0x6D2B79F5; t=Math.imul(t^t>>>15,t|1); t^=t+Math.imul(t^t>>>7,t|61); return ((t^t>>>14)>>>0)/4294967296; } }
+  function mulberry32(a){ return function(){
+  var t = a += 0x6D2B79F5;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}; }
   const SEED = 1337;
   function randN(seed,n){ return mulberry32((seed ^ (n*0x9e3779b9))>>>0)(); }
   function lerp(a,b,t){ return a+(b-a)*t; }
@@ -1223,7 +1229,10 @@ function drawSolidCaps(ctx, p){
   const dw = Math.round(iw*sc), dh = Math.round(p.h);
   const cx = p.x + p.w/2, dx = Math.round(cx - dw/2);
 
-  const _vis = MOBILE_VISUAL_SCALE; const dwVis = Math.round(dw*_vis), dhVis = Math.round(dh*_vis); const dxVis = Math.round(cx - dwVis/2); ctx.drawImage(im,0,0,iw,ih, px(dxVis), px(p.y), px(dwVis), px(dhVis)); return true; }
+  ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
+  p.x=dx; p.w=dw; p.h=dh;
+  return true;
+}
 
 let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
 
@@ -1232,15 +1241,14 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
     platforms.push(p); return p;
   }
   function addDropOnPlatform(p, offsetX=0, lift=28){
-  const rBase = 18;
-  const r = Math.round(rBase * (IS_MOBILE ? MOBILE_GEOM_SCALE : 1));
-  const liftAdj = IS_MOBILE ? (lift+2) : lift;
-  const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r: r, parent: p, offsetX, lift };
-  drops.push(d);
-  return d;
-}
+    const rMobile = (IS_MOBILE ? 21 : 18) * DPR;
+    const liftAdj = ((IS_MOBILE ? (lift+2) : lift)) * DPR;
+    const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r: rMobile, parent: p, offsetX, lift };
+    drops.push(d);
+    return d;
+  }
 
-function diffT(n){ return clamp((n-6)/70, 0, 1); }
+  function diffT(n){ return clamp((n-6)/70, 0, 1); }
 
   function genRing(seed, n, prevTopY, lastX){
     const r = (k)=>randN(seed, n*9973 + k);
@@ -1398,7 +1406,7 @@ function spawnBloodSplash(x,y){
 function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
-    const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
+    const start = addPlatform(W*0.5, H*0.82, 0.42*W, VHEIGHT_SCALED.solid, 'solid');
     addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
@@ -1653,7 +1661,7 @@ function seedWorld(){
         for(let i=0;i<teeth;i++){ const tx=p.x+i*tw, ty=p.y-th; ctx.beginPath(); ctx.moveTo(tx,ty+th); ctx.lineTo(tx+tw*0.5,ty); ctx.lineTo(tx+tw,ty+th); ctx.closePath(); ctx.fillStyle='rgba(241,58,83,0.95)'; ctx.fill(); }
       }
       ctx.strokeStyle=stroke; ctx.lineWidth=lw; ctx.stroke();
-      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} const _vis = MOBILE_VISUAL_SCALE; const wVis = Math.round(p.w*_vis), hVis = Math.round(p.h*_vis); const xVis = Math.round(p.x + (p.w - wVis)/2), yVis = Math.round(p.y + (p.h - hVis)/2); ctx.drawImage(t, xVis, yVis, wVis, hVis); } }
+      } if (p.type==='solid') { drawSolidCaps(ctx, p); } else { const t = (p.type==='fragile')?imgFragile:(p.type==='moving')?imgMoving:(p.type==='spring')?imgSpring:(p.type==='spike')?imgSpike:null; if (t && imgReady(t)) { if(p.type==='spring'){ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetX=0; ctx.shadowOffsetY=0;} ctx.drawImage(t, Math.round(p.x), Math.round(p.y), Math.round(p.w), Math.round(p.h)); } }
       ctx.restore();
     });
 
@@ -1671,7 +1679,11 @@ function seedWorld(){
     // Drops
     drops.forEach(d=>{
       const s=d.r*2.2;
-      const sVis = Math.round(s * MOBILE_VISUAL_SCALE); if(dropImgOk){ ctx.drawImage(imgDrop, d.x-sVis/2, d.y-sVis/2, sVis, sVis); } else{ ctx.beginPath(); ctx.fillStyle='#f13a53'; ctx.arc(d.x,d.y, d.r*(MOBILE_VISUAL_SCALE), 0, Math.PI*2); ctx.fill(); } });// Blood splash blobs
+      if(dropImgOk){ ctx.drawImage(imgDrop, d.x-s/2, d.y-s/2, s, s); }
+      else{ ctx.beginPath(); ctx.fillStyle='#f13a53'; ctx.arc(d.x,d.y,d.r,0,Math.PI*2); ctx.fill(); }
+    });
+
+    // Blood splash blobs
     bloodFX.forEach(f=>{
       ctx.globalAlpha=Math.max(0, Math.min(1, f.alpha));
       const grd = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r*2.2);
@@ -2212,66 +2224,6 @@ function seedWorld(){
   canvas.addEventListener('touchmove',  onMove,  {passive:false});
   canvas.addEventListener('touchend',   onEnd,   {passive:false});
   canvas.addEventListener('touchcancel',onEnd,   {passive:false});
-})();
-</script>
-
-
-<script>
-// Targeted visual-only scale for platforms & drops on phones; physics untouched.
-// No edits to game logic; we intercept only drawImage for specific textures.
-(function(){
-  const SCALE = 1.18;
-  const isMobile = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-                || (Math.min(window.innerWidth, window.innerHeight) <= 820 && (window.devicePixelRatio||1) >= 2);
-
-  function needScale(img){
-    try { return /fragile|moving|spring|spike|solid|drop/i.test((img && img.src) || ''); }
-    catch(e){ return false; }
-  }
-
-  function tryPatch(){
-    // Prefer the 2D context already used by the game if exposed
-    let ctx = window.ctx || null;
-    if (!ctx) {
-      const cv = document.querySelector('canvas');
-      if (cv && cv.getContext) ctx = cv.getContext('2d');
-    }
-    if (!ctx || !isMobile) return false;
-    if (ctx.__drawImagePatched) return true;
-
-    const _drawImage = ctx.drawImage.bind(ctx);
-    ctx.drawImage = function(img, ...rest){
-      if (!needScale(img)) return _drawImage(img, ...rest);
-
-      if (rest.length === 8) {
-        // 9-arg form
-        let [sx, sy, sw, sh, dx, dy, dw, dh] = rest;
-        const dw2 = Math.round(dw * SCALE);
-        const dh2 = Math.round(dh * SCALE);
-        const dx2 = Math.round(dx + (dw - dw2) / 2); // center horizontally
-        const dy2 = Math.round(dy);                   // anchor top to preserve gap above
-        return _drawImage(img, sx, sy, sw, sh, dx2, dy2, dw2, dh2);
-      } else if (rest.length === 4) {
-        // 5-arg form
-        let [dx, dy, dw, dh] = rest;
-        const dw2 = Math.round(dw * SCALE);
-        const dh2 = Math.round(dh * SCALE);
-        const dx2 = Math.round(dx + (dw - dw2) / 2);
-        const dy2 = Math.round(dy);
-        return _drawImage(img, dx2, dy2, dw2, dh2);
-      } else {
-        return _drawImage(img, ...rest);
-      }
-    };
-    ctx.__drawImagePatched = true;
-    return true;
-  }
-
-  const t0 = performance.now();
-  (function loop(){
-    if (tryPatch()) return;
-    if (performance.now() - t0 < 4000) requestAnimationFrame(loop);
-  })();
 })();
 </script>
 
