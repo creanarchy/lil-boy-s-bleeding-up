@@ -1218,7 +1218,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
   function genRing(seed, n, prevTopY, lastX){
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
-    const stepY   = Math.min(SPACING, REACH_Y * (((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE)) ? 1.10 : 1.0));
+    const stepY   = Math.min(SPACING, REACH_Y * ((window.matchMedia && matchMedia('(orientation: portrait)').matches) ? 1.10 : 1.0));
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
@@ -1419,7 +1419,7 @@ function seedWorld(){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE)) ? 0.33*1.10*H : 0.19*H); // +10% spacing when mobile-like
+    SPACING = ((window.matchMedia && matchMedia('(orientation: portrait)').matches) ? 0.33*1.10*H : 0.19*H); // +10% spacing in portrait orientation
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
@@ -1473,7 +1473,7 @@ function seedWorld(){
 
     if (player.y + player.r > bottomY) return gameOver('fall');
 
-    const step = Math.min(SPACING, REACH_Y * (((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE)) ? 1.10 : 1.0));
+    const step = Math.min(SPACING, REACH_Y * ((window.matchMedia && matchMedia('(orientation: portrait)').matches) ? 1.10 : 1.0));
     const currentHeight = Math.max(0, Math.round((H*0.82 - player.y) / step));
     heightTop = Math.max(heightTop, currentHeight);
     score = heightTop; hudH.textContent=score;
