@@ -1142,7 +1142,8 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   let playerImgOk=false, dropImgOk=false; imgPlayer.onload=()=>playerImgOk=true; imgDrop.onload=()=>dropImgOk=true;
 
   // Physics (slightly quicker horizontal feel)
-  const G=3200, JUMP=-1250, VX_MAX=440, SMOOTH=6.8;
+  const G=3200, VX_MAX=440, SMOOTH=6.8;
+  const JUMP = IS_MOBILE ? Math.round(-1250*1.20) : -1250;
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
 
@@ -1219,7 +1220,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
     const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.20 : 1.0);  // spacing +20% на мобильных
+    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.25 : 1.0);  // spacing +25% на мобильных
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
@@ -1372,28 +1373,12 @@ function spawnBloodSplash(x,y){
 function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
-    const start = addPlatform(W*0.5, H*0.82, 0.36*W, (VHEIGHT_SCALED && VHEIGHT_SCALED.solid) ? VHEIGHT_SCALED.solid : 42, 'solid');
+    const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
     addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
     worldTopY = ringTopY;
-    
-    // --- Mobile-only: guaranteed first jump platform just above the start ---
-    (function(){
-      const isMob = ((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches));
-      if (isMob){
-        const reach = REACH_Y; // safe vertical reach
-        const stepFirst = Math.min(SPACING, reach) * 0.72;  // 72% of reach for the very first step
-        const y1 = start.y - stepFirst;
-        const w1 = Math.max(0.30*W, 0.36*W * 0.95);         // similar to early main width, slightly forgiving
-        const cx1 = Math.min(Math.max(start.x + start.w/2, 0.10*W), 0.90*W);
-        const p1 = addPlatform(cx1, y1, w1, (VHEIGHT_SCALED && VHEIGHT_SCALED.solid) ? VHEIGHT_SCALED.solid : 42, 'solid', 0);
-        addDropOnPlatform(p1, 0, 28);
-        ringTopY  = Math.min(ringTopY, y1);
-        worldTopY = Math.min(worldTopY, y1);
-      }
-    })();
-for(let i=0;i<10;i++){
+    for(let i=0;i<10;i++){
       const ring = genRing(SEED, ringIndex, ringTopY, lastMainX);
       const m = (function(){
       const _t = ring.main.type;
@@ -1436,7 +1421,7 @@ for(let i=0;i<10;i++){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.33*H : 0.19*H);  // вернули базовое значение; вертикальный шаг ограничен REACH_Y*0.98
+    SPACING = (IS_MOBILE ? 0.42*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
