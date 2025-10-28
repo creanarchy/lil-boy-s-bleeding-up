@@ -1372,7 +1372,7 @@ function spawnBloodSplash(x,y){
 function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
-    const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
+    const start = addPlatform(W*0.5, H*0.82, 0.36*W, (VHEIGHT_SCALED && VHEIGHT_SCALED.solid) ? VHEIGHT_SCALED.solid : 42, 'solid');
     addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
