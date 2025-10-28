@@ -1220,7 +1220,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
     const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.25 : 1.0);  // spacing +25% на мобильных
+    const stepY   = Math.min(SPACING, REACH_Y);  // clamp: no hidden +25% on mobile to keep jumps reachable
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
