@@ -1013,8 +1013,7 @@ border: 2px solid rgba(126,26,31,0.9);
 <script type="module">
   const wrap = document.getElementById('wrap');
   const cvs  = document.getElementById('c');
-  let ctx  = cvs.getContext('2d', { alpha: false, desynchronized: true, willReadFrequently: true });
-if (!ctx) ctx = cvs.getContext('2d');
+  const ctx  = cvs.getContext('2d');
 
   // === Texture loader ===
   function makeImg(src){ const im=new Image(); im.src=src; return im; }
@@ -1036,49 +1035,21 @@ if (!ctx) ctx = cvs.getContext('2d');
   const SOLID_SPRITES = [imgSolid1,imgSolid2,imgSolid3,imgSolid4,imgSolid5,imgSolid6,imgSolid7,imgSolid8];
 function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width)>0); }
   
-  
-function drawInfiniteBg(ctx, camY, W, H){
-  if (!imgReady(imgBack)) return;
-
-  // Init or refresh cache when width changes or image not cached
-  if (!drawInfiniteBg._cache || drawInfiniteBg._cacheW !== W){
+  function drawInfiniteBg(ctx, camY, W, H){
+    if (!imgReady(imgBack)) return;
+    const dpr = (window.devicePixelRatio||1);
+    const px = v => Math.round(v*dpr)/dpr;
     const iw = (imgBack.naturalWidth||imgBack.width)||1;
     const ih = (imgBack.naturalHeight||imgBack.height)||1;
-    const scale = W / iw;
-    const tileH = Math.max(1, Math.round(ih * scale));
-
-    const Canv = (typeof OffscreenCanvas!=='undefined') ? OffscreenCanvas : window.OffscreenCanvas || null;
-    let buf;
-    if (Canv){
-      buf = new Canv(W, tileH);
-    } else {
-      buf = document.createElement('canvas');
-      buf.width = W; buf.height = tileH;
-    }
-    const bctx = buf.getContext('2d', { alpha:false, desynchronized:true });
-    bctx.imageSmoothingEnabled = false;
-    bctx.clearRect(0,0,W,tileH);
-    // Single upscale into buffer once; runtime draws just copy
-    bctx.drawImage(imgBack, 0,0, iw,ih, 0,0, W, tileH);
-
-    drawInfiniteBg._cache = buf;
-    drawInfiniteBg._cacheW = W;
-    drawInfiniteBg._tileH  = tileH;
+    const scale = W / iw;           // fit to width
+    const tileH = ih * scale;
+    let off = (camY * 0.5 * scale) % tileH; // parallax 0.5
+    if (off < 0) off += tileH;
+    const y1 = px(-off);
+    const y2 = px(y1 + tileH);
+    ctx.drawImage(imgBack, 0,0, iw,ih, 0, y1, W, tileH);
+    ctx.drawImage(imgBack, 0,0, iw,ih, 0, y2, W, tileH);
   }
-
-  const buf   = drawInfiniteBg._cache;
-  const tileH = drawInfiniteBg._tileH;
-  const scale = 1; // already scaled in cache
-
-  let off = (camY * 0.5 * scale) % tileH;
-  if (off < 0) off += tileH;
-  const y1 = -off;
-  const y2 = y1 + tileH;
-
-  ctx.drawImage(buf, 0, y1);
-  ctx.drawImage(buf, 0, y2);
-}
-
 
   // === tiny falling pixel sparks ===
   const SPARK_LAYERS = [
