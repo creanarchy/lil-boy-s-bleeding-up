@@ -1218,7 +1218,8 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
   function genRing(seed, n, prevTopY, lastX){
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
-    const stepY   = Math.min(SPACING, REACH_Y);
+    const baseStep = Math.min(SPACING, REACH_Y);
+    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.10 : 1.0);
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
