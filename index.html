@@ -1377,7 +1377,23 @@ function seedWorld(){
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
     worldTopY = ringTopY;
-    for(let i=0;i<10;i++){
+    
+    // --- Mobile-only: guaranteed first jump platform just above the start ---
+    (function(){
+      const isMob = ((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches));
+      if (isMob){
+        const reach = REACH_Y; // safe vertical reach
+        const stepFirst = Math.min(SPACING, reach) * 0.72;  // 72% of reach for the very first step
+        const y1 = start.y - stepFirst;
+        const w1 = Math.max(0.30*W, 0.36*W * 0.95);         // similar to early main width, slightly forgiving
+        const cx1 = Math.min(Math.max(start.x + start.w/2, 0.10*W), 0.90*W);
+        const p1 = addPlatform(cx1, y1, w1, (VHEIGHT_SCALED && VHEIGHT_SCALED.solid) ? VHEIGHT_SCALED.solid : 42, 'solid', 0);
+        addDropOnPlatform(p1, 0, 28);
+        ringTopY  = Math.min(ringTopY, y1);
+        worldTopY = Math.min(worldTopY, y1);
+      }
+    })();
+for(let i=0;i<10;i++){
       const ring = genRing(SEED, ringIndex, ringTopY, lastMainX);
       const m = (function(){
       const _t = ring.main.type;
