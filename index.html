@@ -1104,15 +1104,14 @@ function solidCapsReady(){ return false; }
   const __MOBILE_GUESS0 = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
     || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR0 >= 2)
     || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
-  const PLATFORM_SCALE = __MOBILE_GUESS0 ? 1.20 : 1.0;  // was 1.50 shared; reduce platform height scale on mobile to add clearance
-  const DROP_SCALE     = __MOBILE_GUESS0 ? 1.50 : 1.0;  // keep drops readable
+  const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
   const VHEIGHT_SCALED = {
-    solid: Math.round(VHEIGHT.solid  * PLATFORM_SCALE),
-    fragile: Math.round(VHEIGHT.fragile* PLATFORM_SCALE),
-    moving:  Math.round(VHEIGHT.moving * PLATFORM_SCALE),
-    spring:  Math.round(VHEIGHT.spring * PLATFORM_SCALE),
-    spike:   Math.round(VHEIGHT.spike  * PLATFORM_SCALE)
+    solid: Math.round(VHEIGHT.solid  * MOBILE_GEOM_SCALE),
+    fragile: Math.round(VHEIGHT.fragile* MOBILE_GEOM_SCALE),
+    moving:  Math.round(VHEIGHT.moving * MOBILE_GEOM_SCALE),
+    spring:  Math.round(VHEIGHT.spring * MOBILE_GEOM_SCALE),
+    spike:   Math.round(VHEIGHT.spike  * MOBILE_GEOM_SCALE)
   };
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
@@ -1208,8 +1207,8 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
     platforms.push(p); return p;
   }
   function addDropOnPlatform(p, offsetX=0, lift=28){
-  const r = Math.round(18 * DROP_SCALE);
-  const liftAdj = Math.round(lift * DROP_SCALE);
+  const r = Math.round(18 * MOBILE_GEOM_SCALE);
+  const liftAdj = Math.round(lift * MOBILE_GEOM_SCALE);
   const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r, parent: p, offsetX, lift: liftAdj };
   drops.push(d);
   return d;
@@ -1219,8 +1218,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
   function genRing(seed, n, prevTopY, lastX){
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
-    const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = baseStep * (((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (window.matchMedia && matchMedia('(orientation: portrait)').matches) || Math.min(window.innerWidth, window.innerHeight) <= 900) ? 1.10 : 1.0);
+    const stepY   = Math.min(SPACING, REACH_Y);
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
