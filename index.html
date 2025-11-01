@@ -1220,7 +1220,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
     const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = Math.min(SPACING, REACH_Y);  // clamp: no hidden +25% on mobile to keep jumps reachable
+    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.25 : 1.0);  // spacing +25% на мобильных
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
@@ -1421,7 +1421,7 @@ function seedWorld(){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.3402*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
+    SPACING = (IS_MOBILE ? 0.42*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
@@ -1533,7 +1533,7 @@ function seedWorld(){
     // Squash/stretch
     let targetSy = 1, targetSx = 1;
     if (player.vy < -80){ targetSy = 1.22; targetSx = 0.92; }
-    else if (player.vy > 80){ targetSy = 0.94; targetSx = 1.18; }
+    else if (player.vy > 80){ targetSy = 0.92; targetSx = 1.06; }
     if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
