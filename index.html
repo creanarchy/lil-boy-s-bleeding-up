@@ -1169,37 +1169,34 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
 
 
+
 function drawSolidCaps(ctx, p){
-  // Draw solid platform strictly from provided fixed-width sprites (1..8)
-  if (typeof SOLID_SPRITES === 'undefined') return false;
+  // Always render solid as a single sprite stretched to (p.w x p.h).
+  if (!SOLID_SPRITES || SOLID_SPRITES.length===0) return false;
+  // Pick the sharpest ready sprite (max width) to minimize blur when stretched
+  let pick = SOLID_SPRITES[0], maxW = 0;
+  for (let i=0;i<SOLID_SPRITES.length;i++){
+    const im = SOLID_SPRITES[i];
+    if (!imgReady(im)) continue;
+    const iw=(im.naturalWidth||im.width)||1;
+    if (iw>maxW){ maxW=iw; pick=im; }
+  }
+  const im = pick;
+  if (!imgReady(im)) return false;
+  const iw=(im.naturalWidth||im.width)||1, ih=(im.naturalHeight||im.height)||1;
+  const dx = p.x, dw = p.w, dh = p.h;
   const px = (v)=> (typeof DPR!=='undefined' ? Math.round(v*DPR)/DPR : Math.round(v));
 
-  // Choose once
-  if (p.spr == null){
-    let bestIdx=-1, bestW=p.w, bestDiff=Infinity;
-    for (let i=0;i<SOLID_SPRITES.length;i++){
-      const im = SOLID_SPRITES[i];
-      if (!imgReady(im)) continue;
-      const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
-      const sc = p.h/ih, dw = Math.round(iw*sc);
-      const d = Math.abs(dw - p.w);
-      if (d < bestDiff){ bestDiff=d; bestIdx=i; bestW=dw; }
-    }
-    if (bestIdx>=0){ p.spr=bestIdx; p.w=bestW; }
-  }
-
-  const im = (p.spr!=null) ? SOLID_SPRITES[p.spr] : null;
-  if (!im || !imgReady(im)) return false;
-
-  const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
-  const sc = p.h/ih;
-  const dw = Math.round(iw*sc), dh = Math.round(p.h);
-  const cx = p.x + p.w/2, dx = Math.round(cx - dw/2);
-
+  // main draw
   ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
-  p.x=dx; p.w=dw; p.h=dh;
+
+  // wrap copies to keep continuous look when crossing boundaries
+  const right = dx + dw;
+  if (dx < 0){ ctx.drawImage(im, 0,0, iw,ih, px(dx + W), px(p.y), px(dw), px(dh)); }
+  if (right > W){ ctx.drawImage(im, 0,0, iw,ih, px(dx - W), px(p.y), px(dw), px(dh)); }
   return true;
 }
+
 
 let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
 
