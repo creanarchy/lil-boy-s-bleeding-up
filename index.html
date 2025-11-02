@@ -1143,7 +1143,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
   // Physics (slightly quicker horizontal feel)
   const G=3200, VX_MAX=440, SMOOTH=6.8;
-  const JUMP = IS_MOBILE ? Math.round(-1250*1.20) : -1250;
+  const JUMP = IS_MOBILE ? Math.round(-1250 * (1.20 * Math.sqrt(1.05))) : -1250;  // scale ~+2.47% to match +5% reach
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
 
@@ -1418,7 +1418,7 @@ function seedWorld(){
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.3402*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
+    SPACING = (IS_MOBILE ? 0.357210*H : 0.19*H);  // +5% mobile spacing  // увеличено расстояние между платформами на мобилках
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
