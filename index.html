@@ -1234,15 +1234,33 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     else if (rPick < pFrag + pMove){ type='moving'; vx = lerp(60, 120, r(21)) * (side>0?1:-1); }
 
     const main    = {x:cx - wMain/2, y, w:wMain, h:22, type, vx};
-    let topY = y, sidePlat=null, dropSide=null;
+    let clampShiftMain = 0;
+    {
+      const margin = 0.02*W;
+      let nx = main.x;
+      if (nx < margin) nx = margin;
+      if (nx + main.w > W - margin) nx = W - margin - main.w;
+      clampShiftMain = nx - main.x;
+      if (clampShiftMain !== 0) main.x = nx;
+    }
+    let topY = y, sidePlat = null, dropSide = null, clampShiftSide = 0;
 
     if (r(3) < (n<4 ? 0.40 : 0.58)){
       const w2  = lerp(0.24*W, 0.15*W, clamp(n/50,0,1));
       const cx2 = clamp(cx + (r(4)-0.5)*MAX_DX*0.95, 0.02*W, 0.98*W);
       const cy  = y - lerp(stepY*0.38, stepY*0.58, r(5));
       sidePlat  = {x:cx2 - w2/2, y:cy, w:w2, h:18, type:'solid', vx:0};
-      topY      = Math.min(topY, cy);
+      {
+        const margin2 = 0.02*W;
+        let nx2 = sidePlat.x;
+        if (nx2 < margin2) nx2 = margin2;
+        if (nx2 + sidePlat.w > W - margin2) nx2 = W - margin2 - sidePlat.w;
+        clampShiftSide = nx2 - sidePlat.x;
+        if (clampShiftSide !== 0) sidePlat.x = nx2;
+      }
+topY      = Math.min(topY, cy);
       if (r(6) < 0.78) dropSide = {x: cx2 + (r(7)-0.5)*w2*0.35, y: cy - 36, r:18};
+      if (clampShiftSide !== 0) dropSide.x += clampShiftSide;
     }
 
     
@@ -1263,7 +1281,8 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
       if (Math.random() < pSpike){ sidePlat.type='spike'; }
     }
 const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
-    return {main, side:sidePlat, dropMain, dropSide, topY, mainCx:cx};
+    if (clampShiftMain !== 0) dropMain.x += clampShiftMain;
+    return {main, side:sidePlat, dropMain, dropSide, topY, mainCx: main.x + main.w*0.5};
   }
 
   function spawnAheadIfNeeded(){
