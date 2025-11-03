@@ -1143,7 +1143,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
   // Physics (slightly quicker horizontal feel)
   const G=3200, VX_MAX=440, SMOOTH=6.8;
-  const JUMP = IS_MOBILE ? Math.round(-1250*1.20) : -1250;
+  const JUMP = IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250;  // +10% reach via velocity
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
 
@@ -1217,7 +1217,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
     const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = Math.min(SPACING, REACH_Y);  // clamp: no hidden +25% on mobile to keep jumps reachable
+    const stepY   = Math.min(SPACING, REACH_Y) * (IS_MOBILE ? 1.10 : 1.0);  // +10% mobile step  // clamp: no hidden +25% on mobile to keep jumps reachable
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
@@ -1371,7 +1371,7 @@ function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
     const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
-    start.spr = 7; if (IS_MOBILE) { start.h = 22; }addDropOnPlatform(start, 0, 36);
+    addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
     worldTopY = ringTopY;
