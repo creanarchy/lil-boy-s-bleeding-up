@@ -1016,7 +1016,14 @@ border: 2px solid rgba(126,26,31,0.9);
   const ctx  = cvs.getContext('2d');
 
   // === Texture loader ===
-// Solid platform fixed-width sprites (1..8)
+  function makeImg(src){ const im=new Image(); im.src=src; return im; }
+  const imgFragile = makeImg("./assets/images/platforms/platform_fragile.png");
+  const imgMoving  = makeImg("./assets/images/platforms/platform_moving.png");
+  const imgSpring  = makeImg("./assets/images/platforms/platform_spring.png");
+  const imgSpike   = makeImg("./assets/images/platforms/platform_spike.png");
+  const imgBack = makeImg("./assets/images/backgrounds/back.png");
+  
+  // Solid platform fixed-width sprites (1..8)
   const imgSolid1 = makeImg("./assets/images/platforms/platform_solid1.png");
   const imgSolid2 = makeImg("./assets/images/platforms/platform_solid2.png");
   const imgSolid3 = makeImg("./assets/images/platforms/platform_solid3.png");
@@ -1027,17 +1034,6 @@ border: 2px solid rgba(126,26,31,0.9);
   const imgSolid8 = makeImg("./assets/images/platforms/platform_solid8.png");
   const SOLID_SPRITES = [imgSolid1,imgSolid2,imgSolid3,imgSolid4,imgSolid5,imgSolid6,imgSolid7,imgSolid8];
 function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width)>0); }
-
-  function makeImg(src){ const im=new Image(); im.src=src; return im; }
-  const imgFragile = makeImg("./assets/images/platforms/platform_fragile.png");
-  const imgMoving  = makeImg("./assets/images/platforms/platform_moving.png");
-  const imgSpring  = makeImg("./assets/images/platforms/platform_spring.png");
-  const imgSpike   = makeImg("./assets/images/platforms/platform_spike.png");
-  const imgBack = makeImg("./assets/images/backgrounds/back.png");
-  
-  // Solid platform fixed-width sprites (1..8)
-  
-
   
   function drawInfiniteBg(ctx, camY, W, H){
     if (!imgReady(imgBack)) return;
@@ -1174,29 +1170,34 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
 
 function drawSolidCaps(ctx, p){
-  // Always render solid as a single sprite stretched to (p.w x p.h).
-  if (!SOLID_SPRITES || SOLID_SPRITES.length===0) return false;
-  // Pick the sharpest ready sprite (max width) to minimize blur when stretched
-  let pick = SOLID_SPRITES[0], maxW = 0;
-  for (let i=0;i<SOLID_SPRITES.length;i++){
-    const im = SOLID_SPRITES[i];
-    if (!imgReady(im)) continue;
-    const iw=(im.naturalWidth||im.width)||1;
-    if (iw>maxW){ maxW=iw; pick=im; }
-  }
-  const im = (p && p.isStart && imgReady(imgSolid8)) ? imgSolid8 : pick;
-  if (!imgReady(im)) return false;
-  const iw=(im.naturalWidth||im.width)||1, ih=(im.naturalHeight||im.height)||1;
-  const dx = p.x, dw = p.w, dh = p.h;
+  // Draw solid platform strictly from provided fixed-width sprites (1..8)
+  if (typeof SOLID_SPRITES === 'undefined') return false;
   const px = (v)=> (typeof DPR!=='undefined' ? Math.round(v*DPR)/DPR : Math.round(v));
 
-  // main draw
-  ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
+  // Choose once
+  if (p.spr == null){
+    let bestIdx=-1, bestW=p.w, bestDiff=Infinity;
+    for (let i=0;i<SOLID_SPRITES.length;i++){
+      const im = SOLID_SPRITES[i];
+      if (!imgReady(im)) continue;
+      const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
+      const sc = p.h/ih, dw = Math.round(iw*sc);
+      const d = Math.abs(dw - p.w);
+      if (d < bestDiff){ bestDiff=d; bestIdx=i; bestW=dw; }
+    }
+    if (bestIdx>=0){ p.spr=bestIdx; p.w=bestW; }
+  }
 
-  // wrap copies to keep continuous look when crossing boundaries
-  const right = dx + dw;
-  if (dx < 0){ ctx.drawImage(im, 0,0, iw,ih, px(dx + W), px(p.y), px(dw), px(dh)); }
-  if (right > W){ ctx.drawImage(im, 0,0, iw,ih, px(dx - W), px(p.y), px(dw), px(dh)); }
+  const im = (p.spr!=null) ? SOLID_SPRITES[p.spr] : null;
+  if (!im || !imgReady(im)) return false;
+
+  const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
+  const sc = p.h/ih;
+  const dw = Math.round(iw*sc), dh = Math.round(p.h);
+  const cx = p.x + p.w/2, dx = Math.round(cx - dw/2);
+
+  ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
+  p.x=dx; p.w=dw; p.h=dh;
   return true;
 }
 
