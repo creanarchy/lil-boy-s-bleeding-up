@@ -1181,7 +1181,7 @@ function drawSolidCaps(ctx, p){
     const iw=(im.naturalWidth||im.width)||1;
     if (iw>maxW){ maxW=iw; pick=im; }
   }
-  const im = pick;
+  const im = (p && p.isStart && imgReady(imgSolid8)) ? imgSolid8 : pick;
   if (!imgReady(im)) return false;
   const iw=(im.naturalWidth||im.width)||1, ih=(im.naturalHeight||im.height)||1;
   const dx = p.x, dw = p.w, dh = p.h;
@@ -1371,7 +1371,8 @@ function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
     const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
-    addDropOnPlatform(start, 0, 36);
+    start.h = VHEIGHT_SCALED.solid; start.isStart = true;
+addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
     worldTopY = ringTopY;
