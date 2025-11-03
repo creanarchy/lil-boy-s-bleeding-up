@@ -2231,14 +2231,17 @@ addDropOnPlatform(start, 0, 36);
 .bar::after{ z-index: 1 !important; }
 /* (keep dark steel center from previous override; not changing colors here) */
 </style>
-<style id="bar-mobile-radius-fix">
-@media (pointer:coarse) {
-  /* On mobile, keep the blood bar capsule fully rounded even at low values */
-  .bar > .bar-inner-clip{
+<style id="bar_mobile_corner_fix">
+/* Mobile: keep blood bar capsule rounded even at low values */
+@media (max-width: 820px) {
+  .bar {
+    overflow: visible !important;
+  }
+  .bar > .bar-inner-clip {
     border-radius: 999px !important;
     overflow: hidden !important;
   }
-  .bar > .bar-inner-clip > .fill{
+  .bar > .bar-inner-clip > .fill {
     border-radius: 999px !important;
   }
 }
