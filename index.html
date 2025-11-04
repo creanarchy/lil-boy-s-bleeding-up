@@ -1272,13 +1272,23 @@ function drawSolidCaps(ctx, p){
 let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
 
   function addPlatform(cx,y,w,h,type='solid', vx=0){
-    const p={x:cx-w/2,y,w,h,type,ttl:Infinity,touched:false,shake:0,vx:vx,alive:true};
-    platforms.push(p); return p;
-  }
+  const p={x:cx-w/2,y,w,h,type,ttl:Infinity,touched:false,shake:0,vx:vx,alive:true};
+  // Hard clamp to keep platform fully on-screen
+  try{
+    const margin = 0.02 * W;
+    if (p.x < margin) p.x = margin;
+    if (p.x + p.w > W - margin) p.x = W - margin - p.w;
+  }catch(_){}
+  platforms.push(p); return p;
+}
   function addDropOnPlatform(p, offsetX=0, lift=28){
+  const margin = 0.02 * W;
   const r = Math.round(18 * MOBILE_GEOM_SCALE * 1.15);
   const liftAdj = Math.round(lift * MOBILE_GEOM_SCALE * 1.15);
-  const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r, parent: p, offsetX, lift: liftAdj };
+  let dx = p.x + p.w/2 + offsetX;
+if (dx < margin) dx = margin;
+if (dx > W - margin) dx = W - margin;
+const d = { x: dx, y: p.y - liftAdj, r, parent: p, offsetX, lift: liftAdj };
   drops.push(d);
   return d;
 }
