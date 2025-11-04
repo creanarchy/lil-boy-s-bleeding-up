@@ -993,6 +993,47 @@ border: 2px solid rgba(126,26,31,0.9);
 }
 </style>
 
+
+<style id="bar_mobile_round_fix_final">
+@media (pointer:coarse), (max-width: 820px){
+  /* Keep the capsule perfectly round on mobile at all times (including blink) */
+  .bar, .bar::after{ overflow: visible !important; }
+  .bar > .bar-inner-clip{
+    border-radius:9999px !important;
+    overflow:hidden !important;
+    -webkit-mask-image:none !important; /* wrapper masks; not the core */
+    clip-path: inset(0 round 9999px) !important;
+  }
+  .bar > .bar-inner-clip > .fill,
+  .bar > .fill,
+  #bloodFill{
+    border-radius:9999px !important;
+    background-clip:padding-box !important;
+    -webkit-background-clip:padding-box !important;
+    /* Keep a soft round end even under GPU effects */
+    -webkit-mask-image: radial-gradient(circle at right 50%, #000 99.8%, transparent 100%) !important;
+    clip-path: inset(0 round 9999px) !important;
+    will-change: filter;
+  }
+
+  /* Replace vertical scaling in the low-breath state with brightness-only pulse to avoid geometry changes */
+  @keyframes barLowBreathMobile {
+    0%   { filter: saturate(1) brightness(1); }
+    50%  { filter: saturate(1.18) brightness(1.18); }
+    100% { filter: saturate(1) brightness(1); }
+  }
+  .bar .bar-inner-clip > .fill.low-breath{
+    animation: barLowBreathMobile 1200ms ease-in-out infinite !important;
+    transform: none !important; /* kill scaleY that causes square artifacts */
+  }
+
+  /* Also keep collect/damage pulses from deforming geometry on mobile */
+  .bar .bar-inner-clip > .fill.collect,
+  .bar .bar-inner-clip > .fill.damage{
+    transform: none !important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="stage">
