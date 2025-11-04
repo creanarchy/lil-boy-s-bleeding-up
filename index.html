@@ -1236,6 +1236,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   function randN(seed,n){ return mulberry32((seed ^ (n*0x9e3779b9))>>>0)(); }
   function lerp(a,b,t){ return a+(b-a)*t; }
   function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
+  function expSmooth(curr, target, rate, dt){ return curr + (target - curr) * (1 - Math.exp(-rate * dt)); }
 
 
 
@@ -1645,16 +1646,16 @@ addDropOnPlatform(start, 0, 36);
     let targetSy = 1, targetSx = 1;
     if (player.vy < -VEL_THRESH){ targetSy = 1.22; targetSx = 0.92; }
     else if (player.vy > VEL_THRESH){ targetSy = 0.95; targetSx = 1.10; }
-    if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
+    if (landed){ targetSy = IS_MOBILE ? 1.12 : 1.18; targetSx = IS_MOBILE ? 0.95 : 0.92; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
       const osc = Math.sin((1-t)*Math.PI*1.2) * (t*0.12);
       targetSy = 1 + osc; targetSx = 1 - osc*0.6;
       player.landBounce = Math.max(0, t - dt*2.2);
     }
-    const k = 12*dt;
-    player.sy += (targetSy - player.sy) * k;
-    player.sx += (targetSx - player.sx) * k;
+    const rate = (IS_MOBILE ? 18 : 12);
+    player.sy = expSmooth(player.sy, targetSy, rate, dt);
+    player.sx = expSmooth(player.sx, targetSx, rate, dt);
 
     // Pickups + sparks
     for (let i=0;i<drops.length;i++){
@@ -1774,7 +1775,9 @@ addDropOnPlatform(start, 0, 36);
     ctx.save();
     // enable smoothing only for player to avoid shimmering of scaled sprite on mobile
     const __prevSmooth = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = true;
-    ctx.translate(player.x, player.y);
+    // snap to device pixels to reduce subpixel jitter
+    const __dpr = (window.devicePixelRatio||1); const __px = v => Math.round(v*__dpr)/__dpr;
+    ctx.translate(__px(player.x), __px(player.y));
     ctx.scale(player.sx, player.sy);
     if(playerImgOk){ const s=player.r*2.6; ctx.drawImage((hitTimer>0 && imgPlayerRed && imgPlayerRed.complete ? imgPlayerRed : imgPlayer), -s/2, -s/2, s, s); }
     else{ ctx.beginPath(); ctx.fillStyle='#0d0b0d'; ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill(); }
