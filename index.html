@@ -1034,6 +1034,16 @@ border: 2px solid rgba(126,26,31,0.9);
   }
 }
 </style>
+
+<style id="cta-hover-soften-v2">
+/* Extra-soft hover for "Играть" and "Попробовать ещё" */
+#menu .onebtn button:hover,
+#menu .onebtn #startBtn:hover,
+#menu .start-cta:hover,
+#gameover .cta-chrome:hover{
+  filter: brightness(1.10) !important; /* softer than 1.18 */
+}
+</style>
 </head>
 <body>
 <div class="stage">
@@ -1395,6 +1405,18 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
   overEl.addEventListener('click', overlayRestart);
   overEl.addEventListener('touchstart', overlayRestart, {passive:false});
   againBtn.addEventListener('click', overlayRestart);
+
+// --- Restrict restart to button only (no overlay tap-to-restart) ---
+try{
+  overEl.removeEventListener('click', overlayRestart);
+  overEl.removeEventListener('touchstart', overlayRestart);
+  // Block overlay from bubbling clicks
+  overEl.addEventListener('click', function(e){ e.stopPropagation(); }, {passive:false});
+  overEl.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:false});
+  // Keep the button working
+  againBtn.addEventListener('click', function(e){ e.stopPropagation(); overlayRestart(e); }, {passive:false});
+}catch(_){}
+
 
   startBtn.onclick=startGame;
   if (howBtn) howBtn.onclick=()=>alert('Свайпы/стрелки влево-вправо. Автопрыжок. Сквозные края без шлейфа. Капли парят выше.');
