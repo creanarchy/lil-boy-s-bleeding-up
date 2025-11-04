@@ -1178,11 +1178,11 @@ function solidCapsReady(){ return false; }
   const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
   const VHEIGHT_SCALED = {
-    solid: Math.round(VHEIGHT.solid  * MOBILE_GEOM_SCALE),
-    fragile: Math.round(VHEIGHT.fragile* MOBILE_GEOM_SCALE),
-    moving:  Math.round(VHEIGHT.moving * MOBILE_GEOM_SCALE),
-    spring:  Math.round(VHEIGHT.spring * MOBILE_GEOM_SCALE),
-    spike:   Math.round(VHEIGHT.spike  * MOBILE_GEOM_SCALE)
+    solid: Math.round(VHEIGHT.solid  * MOBILE_GEOM_SCALE * 1.15),
+    fragile: Math.round(VHEIGHT.fragile* MOBILE_GEOM_SCALE * 1.15),
+    moving:  Math.round(VHEIGHT.moving * MOBILE_GEOM_SCALE * 1.15),
+    spring:  Math.round(VHEIGHT.spring * MOBILE_GEOM_SCALE * 1.15),
+    spike:   Math.round(VHEIGHT.spike  * MOBILE_GEOM_SCALE * 1.15)
   };
   function widthFromAR(img, targetH){
     const h0 = (img.naturalHeight||img.height)||1;
@@ -1213,8 +1213,8 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   let playerImgOk=false, dropImgOk=false; imgPlayer.onload=()=>playerImgOk=true; imgDrop.onload=()=>dropImgOk=true;
 
   // Physics (slightly quicker horizontal feel)
-  const G=3200, VX_MAX=440, SMOOTH=6.8;
-  const JUMP = IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250;  // +10% reach via velocity
+  const G=3200*1.15, VX_MAX=440*1.15, SMOOTH=6.8;
+  const JUMP = (IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250) * 1.15;  // +10% reach via velocity
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
 
@@ -1276,8 +1276,8 @@ let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
     platforms.push(p); return p;
   }
   function addDropOnPlatform(p, offsetX=0, lift=28){
-  const r = Math.round(18 * MOBILE_GEOM_SCALE);
-  const liftAdj = Math.round(lift * MOBILE_GEOM_SCALE);
+  const r = Math.round(18 * MOBILE_GEOM_SCALE * 1.15);
+  const liftAdj = Math.round(lift * MOBILE_GEOM_SCALE * 1.15);
   const d = { x: p.x + p.w/2 + offsetX, y: p.y - liftAdj, r, parent: p, offsetX, lift: liftAdj };
   drops.push(d);
   return d;
@@ -1521,14 +1521,14 @@ addDropOnPlatform(start, 0, 36);
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.3402*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
+    SPACING = (IS_MOBILE ? 0.3402*H : 0.19*H) * 1.15;  // увеличено расстояние между платформами на мобилках
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
     const p0 = platforms[0];
-    player.r = 28 * Math.max(1, DPR);
+    player.r = Math.round(28 * Math.max(1, DPR) * 1.15);
     player.x = p0.x + p0.w/2;
-    player.y = p0.y - player.r - 40;
+    player.y = p0.y - player.r - Math.round(40 * 1.15);
     player.vx=0; player.vy=0; player.sx=1; player.sy=1; player.landBounce=0;
     lastTime=performance.now(); loop();
   }
