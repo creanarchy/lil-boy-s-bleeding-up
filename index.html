@@ -1217,6 +1217,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   const JUMP = (IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250) * 1.15;  // +10% reach via velocity
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
+  const VEL_THRESH = IS_MOBILE ? 80*1.15 : 80; // keep squash/stretch thresholds proportional on mobile
 
   const STATE={MENU:0,PLAY:1,OVER:2}; let state=STATE.MENU;
   const player={x:0,y:0,r:28,vx:0,vy:0, sx:1, sy:1, landBounce:0};
@@ -1642,8 +1643,8 @@ addDropOnPlatform(start, 0, 36);
 
     // Squash/stretch
     let targetSy = 1, targetSx = 1;
-    if (player.vy < -80){ targetSy = 1.22; targetSx = 0.92; }
-    else if (player.vy > 80){ targetSy = 0.95; targetSx = 1.10; }
+    if (player.vy < -VEL_THRESH){ targetSy = 1.22; targetSx = 0.92; }
+    else if (player.vy > VEL_THRESH){ targetSy = 0.95; targetSx = 1.10; }
     if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
@@ -1771,10 +1772,14 @@ addDropOnPlatform(start, 0, 36);
 
     // Player
     ctx.save();
+    // enable smoothing only for player to avoid shimmering of scaled sprite on mobile
+    const __prevSmooth = ctx.imageSmoothingEnabled; ctx.imageSmoothingEnabled = true;
     ctx.translate(player.x, player.y);
     ctx.scale(player.sx, player.sy);
     if(playerImgOk){ const s=player.r*2.6; ctx.drawImage((hitTimer>0 && imgPlayerRed && imgPlayerRed.complete ? imgPlayerRed : imgPlayer), -s/2, -s/2, s, s); }
     else{ ctx.beginPath(); ctx.fillStyle='#0d0b0d'; ctx.arc(0,0,player.r,0,Math.PI*2); ctx.fill(); }
+    // restore previous smoothing state
+    ctx.imageSmoothingEnabled = __prevSmooth;
     ctx.restore();
 
     ctx.restore();
