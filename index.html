@@ -974,18 +974,12 @@ border: 2px solid rgba(126,26,31,0.9);
 </style>
 
 
-<style id="bar_mobile_round_fix">
-/* Ensure red core is ABOVE inner steel rim everywhere (mobile & desktop). */
-/* Root cause: an earlier style sets .bar::after with z-index:5; on some mobile browsers
-   later overrides placed after </html> are ignored, so the rim sits above the fill and
-   visually "cuts" the rounded end into a square. We force correct stacking here. */
-.bar{ overflow: hidden !important; position: relative !important; }
-.bar .fill{ position:absolute !important; z-index: 2 !important; border-radius: 12px !important; }
-.bar::after{ z-index: 1 !important; }
-/* Also, in case transform:scaleX is still applied by game code, we mirror to width via existing JS.
-   To avoid any rounding glitches on mobile, we slightly nudge subpixel rounding: */
-@supports (-webkit-appearance:none){
-  .bar .fill{ -webkit-mask-image: radial-gradient(circle at right 50%, #000 99.5%, transparent 100%); }
+<style id="bar-mobile-fix">
+/* Fix rounded end on mobile: ensure fill is above inner rim and clipped */
+@media (pointer:coarse), (max-width: 820px){
+  .bar{ overflow:hidden !important; position:relative !important; }
+  .bar .fill{ position:absolute !important; z-index:2 !important; border-radius:12px !important; }
+  .bar::after{ z-index:1 !important; }
 }
 </style>
 
