@@ -1236,7 +1236,6 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   function randN(seed,n){ return mulberry32((seed ^ (n*0x9e3779b9))>>>0)(); }
   function lerp(a,b,t){ return a+(b-a)*t; }
   function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
-  function smoothstep(a,b,x){ x = clamp((x-a)/(b-a), 0, 1); return x*x*(3-2*x); }
 
 
 
@@ -1642,32 +1641,34 @@ addDropOnPlatform(start, 0, 36);
       }
     }
 
-    // Squash/stretch (continuous, no snapping at apex)
-let targetSy = 1, targetSx = 1;
-{
-  const vy = player.vy;
-  if (vy < 0){
-    // Ascent: blend 1 -> (1.22, 0.92) with smoothstep by |-vy|/VEL_THRESH
-    const f = smoothstep(0, 1, Math.min(1, (-vy)/VEL_THRESH));
-    targetSy = lerp(1, 1.22, f);
-    targetSx = lerp(1, 0.92, f);
-  } else if (vy > 0){
-    // Descent: blend 1 -> (0.95, 1.10)
-    const f = smoothstep(0, 1, Math.min(1, vy/VEL_THRESH));
-    targetSy = lerp(1, 0.95, f);
-    targetSx = lerp(1, 1.10, f);
-  }
-}
-if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
-if (player.landBounce > 0){
-  const t = player.landBounce;
-  const osc = Math.sin((1-t)*Math.PI*1.2) * (t*0.12);
-  targetSy = 1 + osc; targetSx = 1 - osc*0.6;
-  player.landBounce = Math.max(0, t - dt*2.2);
-}
-const k = 12*dt;
-player.sy += (targetSy - player.sy) * k;
-player.sx += (targetSx - player.sx) * k;
+    // Squash/stretch
+    let targetSy = 1, targetSx = 1;
+    if (IS_MOBILE){
+      const speed = Math.abs(player.vy);
+      const norm = Math.min(1, speed / (VEL_THRESH * 1.4));
+      if (player.vy < 0){
+        // smoother stretch while going up, fades out near the top of the jump
+        targetSy = 1 + 0.22 * norm;
+        targetSx = 1 - 0.08 * norm;
+      } else if (player.vy > 0){
+        // gentle squash when falling
+        targetSy = 1 - 0.05 * norm;
+        targetSx = 1 + 0.10 * norm;
+      }
+    } else {
+      if (player.vy < -VEL_THRESH){ targetSy = 1.22; targetSx = 0.92; }
+      else if (player.vy > VEL_THRESH){ targetSy = 0.95; targetSx = 1.10; }
+    }
+    if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
+    if (player.landBounce > 0){
+      const t = player.landBounce;
+      const osc = Math.sin((1-t)*Math.PI*1.2) * (t*0.12);
+      targetSy = 1 + osc; targetSx = 1 - osc*0.6;
+      player.landBounce = Math.max(0, t - dt*2.2);
+    }
+    const k = (IS_MOBILE ? 9*dt : 12*dt);
+    player.sy += (targetSy - player.sy) * k;
+    player.sx += (targetSx - player.sx) * k;
 
     // Pickups + sparks
     for (let i=0;i<drops.length;i++){
