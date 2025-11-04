@@ -131,8 +131,8 @@
 <style id="bar_capsule_widthsync">
 /* Geometry of inner groove */
 :root{ --pad:3px; --rad:12px; }
-.bar{ position:relative !important;  }
-.bar::after{ z-index:1 !important; pointer-events:none !important; } /* steel rim below fill */ /* steel rim on top */
+.bar{ position:relative !important; overflow:visible; }
+.bar::after{ z-index:5 !important; pointer-events:none !important; } /* steel rim on top */
 
 /* Clip that matches inner steel groove exactly */
 .bar > .bar-inner-clip{
@@ -973,23 +973,6 @@ border: 2px solid rgba(126,26,31,0.9);
   #c { touch-action: none; -webkit-touch-callout: none; }
 </style>
 
-<style id="bar-final-overrides">
-/* 1) Kill any moving sheens for sure */
-.bar::before,
-.bar .fill::before{
-  content: none !important;
-  animation: none !important;
-  display: none !important;
-}
-/* 2) Ensure red core stays above inner shadow and keeps rounded end */
-.bar{ position: relative !important; overflow: hidden !important; }
-.bar .fill{
-  z-index: 2 !important;
-  border-radius: 12px !important;
-}
-.bar::after{ z-index: 1 !important; }
-/* (keep dark steel center from previous override; not changing colors here) */
-</style>
 </head>
 <body>
 <div class="stage">
@@ -1159,8 +1142,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   let playerImgOk=false, dropImgOk=false; imgPlayer.onload=()=>playerImgOk=true; imgDrop.onload=()=>dropImgOk=true;
 
   // Physics (slightly quicker horizontal feel)
-  const G=3200, VX_MAX=440, SMOOTH=6.8;
-  const JUMP = IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250;  // +10% reach via velocity
+  const G=3200, JUMP=-1250, VX_MAX=440, SMOOTH=6.8;
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
 
@@ -1186,34 +1168,37 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
 
 
-
 function drawSolidCaps(ctx, p){
-  // Always render solid as a single sprite stretched to (p.w x p.h).
-  if (!SOLID_SPRITES || SOLID_SPRITES.length===0) return false;
-  // Pick the sharpest ready sprite (max width) to minimize blur when stretched
-  let pick = SOLID_SPRITES[0], maxW = 0;
-  for (let i=0;i<SOLID_SPRITES.length;i++){
-    const im = SOLID_SPRITES[i];
-    if (!imgReady(im)) continue;
-    const iw=(im.naturalWidth||im.width)||1;
-    if (iw>maxW){ maxW=iw; pick=im; }
-  }
-  const im = (p && p.isStart && imgReady(imgSolid8)) ? imgSolid8 : pick;
-  if (!imgReady(im)) return false;
-  const iw=(im.naturalWidth||im.width)||1, ih=(im.naturalHeight||im.height)||1;
-  const dx = p.x, dw = p.w, dh = p.h;
+  // Draw solid platform strictly from provided fixed-width sprites (1..8)
+  if (typeof SOLID_SPRITES === 'undefined') return false;
   const px = (v)=> (typeof DPR!=='undefined' ? Math.round(v*DPR)/DPR : Math.round(v));
 
-  // main draw
-  ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
+  // Choose once
+  if (p.spr == null){
+    let bestIdx=-1, bestW=p.w, bestDiff=Infinity;
+    for (let i=0;i<SOLID_SPRITES.length;i++){
+      const im = SOLID_SPRITES[i];
+      if (!imgReady(im)) continue;
+      const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
+      const sc = p.h/ih, dw = Math.round(iw*sc);
+      const d = Math.abs(dw - p.w);
+      if (d < bestDiff){ bestDiff=d; bestIdx=i; bestW=dw; }
+    }
+    if (bestIdx>=0){ p.spr=bestIdx; p.w=bestW; }
+  }
 
-  // wrap copies to keep continuous look when crossing boundaries
-  const right = dx + dw;
-  if (dx < 0){ ctx.drawImage(im, 0,0, iw,ih, px(dx + W), px(p.y), px(dw), px(dh)); }
-  if (right > W){ ctx.drawImage(im, 0,0, iw,ih, px(dx - W), px(p.y), px(dw), px(dh)); }
+  const im = (p.spr!=null) ? SOLID_SPRITES[p.spr] : null;
+  if (!im || !imgReady(im)) return false;
+
+  const ih=(im.naturalHeight||im.height)||1, iw=(im.naturalWidth||im.width)||1;
+  const sc = p.h/ih;
+  const dw = Math.round(iw*sc), dh = Math.round(p.h);
+  const cx = p.x + p.w/2, dx = Math.round(cx - dw/2);
+
+  ctx.drawImage(im, 0,0, iw,ih, px(dx), px(p.y), px(dw), px(dh));
+  p.x=dx; p.w=dw; p.h=dh;
   return true;
 }
-
 
 let ringIndex=0, ringTopY=0, worldTopY=0, lastMainX=0;
 
@@ -1234,7 +1219,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const r = (k)=>randN(seed, n*9973 + k);
     const t = diffT(n);
     const baseStep = Math.min(SPACING, REACH_Y);
-    const stepY   = Math.min(SPACING, REACH_Y) * (IS_MOBILE ? 1.10 : 1.0);  // +10% mobile step  // clamp: no hidden +25% on mobile to keep jumps reachable
+    const stepY   = baseStep * ((((typeof __MOBILE_GUESS0!=='undefined' && __MOBILE_GUESS0) || (typeof IS_MOBILE!=='undefined' && IS_MOBILE) || (window.matchMedia && matchMedia('(orientation: portrait)').matches))) ? 1.25 : 1.0);  // spacing +25% на мобильных
     const y       = prevTopY - stepY;
 
     const dxScale = n < 4 ? 0.40 : lerp(0.75, 1.50, t);
@@ -1251,33 +1236,15 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     else if (rPick < pFrag + pMove){ type='moving'; vx = lerp(60, 120, r(21)) * (side>0?1:-1); }
 
     const main    = {x:cx - wMain/2, y, w:wMain, h:22, type, vx};
-    let clampShiftMain = 0;
-    {
-      const margin = 0.02*W;
-      let nx = main.x;
-      if (nx < margin) nx = margin;
-      if (nx + main.w > W - margin) nx = W - margin - main.w;
-      clampShiftMain = nx - main.x;
-      if (clampShiftMain !== 0) main.x = nx;
-    }
-    let topY = y, sidePlat = null, dropSide = null, clampShiftSide = 0;
+    let topY = y, sidePlat=null, dropSide=null;
 
     if (r(3) < (n<4 ? 0.40 : 0.58)){
       const w2  = lerp(0.24*W, 0.15*W, clamp(n/50,0,1));
       const cx2 = clamp(cx + (r(4)-0.5)*MAX_DX*0.95, 0.02*W, 0.98*W);
       const cy  = y - lerp(stepY*0.38, stepY*0.58, r(5));
       sidePlat  = {x:cx2 - w2/2, y:cy, w:w2, h:18, type:'solid', vx:0};
-      {
-        const margin2 = 0.02*W;
-        let nx2 = sidePlat.x;
-        if (nx2 < margin2) nx2 = margin2;
-        if (nx2 + sidePlat.w > W - margin2) nx2 = W - margin2 - sidePlat.w;
-        clampShiftSide = nx2 - sidePlat.x;
-        if (clampShiftSide !== 0) sidePlat.x = nx2;
-      }
-topY      = Math.min(topY, cy);
+      topY      = Math.min(topY, cy);
       if (r(6) < 0.78) dropSide = {x: cx2 + (r(7)-0.5)*w2*0.35, y: cy - 36, r:18};
-      if (clampShiftSide !== 0) dropSide.x += clampShiftSide;
     }
 
     
@@ -1298,8 +1265,7 @@ topY      = Math.min(topY, cy);
       if (Math.random() < pSpike){ sidePlat.type='spike'; }
     }
 const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
-    if (clampShiftMain !== 0) dropMain.x += clampShiftMain;
-    return {main, side:sidePlat, dropMain, dropSide, topY, mainCx: main.x + main.w*0.5};
+    return {main, side:sidePlat, dropMain, dropSide, topY, mainCx:cx};
   }
 
   function spawnAheadIfNeeded(){
@@ -1407,8 +1373,7 @@ function seedWorld(){
     platforms.length=0; drops.length=0; sparks.length=0;
     ringIndex=0; lastSpringAt=-999; springRings=[]; lastSpikeAt=-999; spikeRings=[];
     const start = addPlatform(W*0.5, H*0.82, 0.42*W, 42, 'solid');
-    start.h = VHEIGHT_SCALED.solid; start.isStart = true;
-addDropOnPlatform(start, 0, 36);
+    addDropOnPlatform(start, 0, 36);
     lastMainX = start.x + start.w/2;
     ringTopY  = start.y;
     worldTopY = ringTopY;
@@ -1455,7 +1420,7 @@ addDropOnPlatform(start, 0, 36);
     document.body.classList.remove('over');
     state=STATE.PLAY; menuEl.style.display='none'; overEl.style.display='none';
     input.dir = 0;
-    SPACING = (IS_MOBILE ? 0.3402*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
+    SPACING = (IS_MOBILE ? 0.42*H : 0.19*H);  // увеличено расстояние между платформами на мобилках
     MAX_DX  = VX_MAX * (2*Math.abs(JUMP/G)) * 0.8;
     blood=1; score=0; dropsCollected=0; heightTop=0; cameraY=0;
     seedWorld();
@@ -1567,7 +1532,7 @@ addDropOnPlatform(start, 0, 36);
     // Squash/stretch
     let targetSy = 1, targetSx = 1;
     if (player.vy < -80){ targetSy = 1.22; targetSx = 0.92; }
-    else if (player.vy > 80){ targetSy = 0.95; targetSx = 1.10; }
+    else if (player.vy > 80){ targetSy = 0.94; targetSx = 1.18; }
     if (landed){ targetSy = 1.18; targetSx = 0.92; player.landBounce = 1.0; }
     if (player.landBounce > 0){
       const t = player.landBounce;
@@ -2231,3 +2196,20 @@ addDropOnPlatform(start, 0, 36);
 </body>
 </html>
 
+<style id="bar-final-overrides">
+/* 1) Kill any moving sheens for sure */
+.bar::before,
+.bar .fill::before{
+  content: none !important;
+  animation: none !important;
+  display: none !important;
+}
+/* 2) Ensure red core stays above inner shadow and keeps rounded end */
+.bar{ position: relative !important; overflow: hidden !important; }
+.bar .fill{
+  z-index: 2 !important;
+  border-radius: 12px !important;
+}
+.bar::after{ z-index: 1 !important; }
+/* (keep dark steel center from previous override; not changing colors here) */
+</style>
