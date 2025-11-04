@@ -973,6 +973,22 @@ border: 2px solid rgba(126,26,31,0.9);
   #c { touch-action: none; -webkit-touch-callout: none; }
 </style>
 
+
+<style id="bar_mobile_round_fix">
+/* Ensure red core is ABOVE inner steel rim everywhere (mobile & desktop). */
+/* Root cause: an earlier style sets .bar::after with z-index:5; on some mobile browsers
+   later overrides placed after </html> are ignored, so the rim sits above the fill and
+   visually "cuts" the rounded end into a square. We force correct stacking here. */
+.bar{ overflow: hidden !important; position: relative !important; }
+.bar .fill{ position:absolute !important; z-index: 2 !important; border-radius: 12px !important; }
+.bar::after{ z-index: 1 !important; }
+/* Also, in case transform:scaleX is still applied by game code, we mirror to width via existing JS.
+   To avoid any rounding glitches on mobile, we slightly nudge subpixel rounding: */
+@supports (-webkit-appearance:none){
+  .bar .fill{ -webkit-mask-image: radial-gradient(circle at right 50%, #000 99.5%, transparent 100%); }
+}
+</style>
+
 </head>
 <body>
 <div class="stage">
@@ -986,7 +1002,7 @@ border: 2px solid rgba(126,26,31,0.9);
     </div>
 
     <div class="barwrap" style="display:none">
-      <div class="bar"><div class="fill" id="bloodFill" style="width:100%"></div></div>
+      <div class="bar"><div class="fill" id="bloodFill" style="transform:scaleX(1)"></div></div>
     </div>
 
     <div class="overlay" id="menu">
@@ -1502,10 +1518,8 @@ addDropOnPlatform(start, 0, 36);
     const drainAdd  = lerp(0.0, 0.06, tDiff);
     drainPerSec = Math.max(0, Math.min(0.18, drainBase + drainAdd));
     blood -= drainPerSec * dt; if(blood<0) blood=0;
-    const bloodSafe = Math.max(0, Math.min(1, blood));
-    bloodFill.style.width = (bloodSafe * 100).toFixed(3) + '%';
-    bloodFill.style.transform = 'none';
-    if(bloodSafe<=0) return gameOver('blood');
+    bloodFill.style.transform=`scaleX(${Math.max(0,blood)})`;
+    if(blood<=0) return gameOver('blood');
 
     // Platforms
     for (let i=platforms.length-1;i>=0;i--){
