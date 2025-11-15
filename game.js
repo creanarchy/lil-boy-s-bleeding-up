@@ -130,7 +130,7 @@ ctx.imageSmoothingEnabled = false;
 
 
 const SUPABASE_URL = 'https://xysyawfwdstgfktsxxhl.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3lhd2Z3ZHN0Z2ZrdHN4eGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NzEzNDUsImV4cCI6MjA3ODE0NzM0NX0.aspYgKHlOWLg3weHwAYv1we9V2JYbiwE3zORwq';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3lhd2Z3ZHN0Z2ZrdHN4eGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NzEzNDUsImV4cCI6MjA3ODE0NzM0NX0.aspYgKHlOWLg3weHwAYv1we9V2JYbiwE3zORwqZrmEY';
 
 let supabaseClient = null;
 let currentPlayer = {
