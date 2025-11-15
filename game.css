@@ -1566,3 +1566,16 @@ border: 2px solid rgba(126,26,31,0.9);
   border-radius: 12px !important;
 }
 .bar::after{ z-index: 1 !important; }
+
+/* ↓↓↓ Username in BANK tab ↓↓↓ */
+.bank-username {
+    margin-top: 28px !important;
+    font-size: 18px !important;
+    color: #ffffffcc !important;
+    text-align: center !important;
+
+   text-shadow:
+        0 0 6px rgba(255,255,255,0.40),
+        0 0 14px rgba(255,255,255,0.25);
+
+}
