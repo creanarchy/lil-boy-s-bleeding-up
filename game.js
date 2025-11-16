@@ -1,3 +1,12 @@
+(function(){
+  function setVH(){
+    var vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+  }
+  setVH();
+  window.addEventListener('resize', setVH);
+})();
+
 const wrap = document.getElementById('wrap');
   const cvs  = document.getElementById('c');
   const ctx  = cvs.getContext('2d');
@@ -343,7 +352,6 @@ async function renderProgress(tab){
     if (tab === 'bank'){
       const bank = await fetchMyBank();
       MY_BANK = bank || 0;
-      const bankUsername = currentPlayer && (currentPlayer.username || currentPlayer.telegram_id) ? '@' + (currentPlayer.username || currentPlayer.telegram_id) : '';
       progressTableWrap.innerHTML = `
         <div class="bank-card">
           <div class="bank-label">Банк</div>
@@ -351,7 +359,6 @@ async function renderProgress(tab){
             <img class="drop-ico bank" src="./assets/images/game elements/drop.png" alt=""/>
             ${MY_BANK}
           </div>
-          ${bankUsername ? `<div class="bank-username">${bankUsername}</div>` : ''}
         </div>
       `;
       return;
