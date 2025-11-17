@@ -1564,3 +1564,16 @@ border: 2px solid rgba(126,26,31,0.9);
   border-radius: 12px !important;
 }
 .bar::after{ z-index: 1 !important; }
+
+@media (pointer:coarse), (max-width: 820px){
+  #hud{
+    top: calc(12px + 6vh);
+  }
+  .progress-btn{
+    top: calc(12px + 6vh);
+  }
+  .barwrap{
+    bottom: calc(12px + 3vh);
+  }
+}
+
