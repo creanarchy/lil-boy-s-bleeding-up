@@ -121,7 +121,27 @@ ctx.imageSmoothingEnabled = false;
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
   var MOBILE_SCALE = IS_MOBILE ? 1.0 : 1.0;
   let W=0, H=0;
-  function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
+  function fit(){
+    const r = wrap.getBoundingClientRect();
+    if (IS_MOBILE) {
+      W = cvs.width = Math.round(r.width * DPR);
+      H = cvs.height = Math.round(r.height * DPR);
+      cvs.style.width = r.width + 'px';
+      cvs.style.height = r.height + 'px';
+    } else {
+      const AR = 9 / 16;
+      let targetH = r.height;
+      let targetW = targetH * AR;
+      if (targetW > r.width) {
+        targetW = r.width;
+        targetH = targetW / AR;
+      }
+      W = cvs.width = Math.round(targetW * DPR);
+      H = cvs.height = Math.round(targetH * DPR);
+      cvs.style.width = targetW + 'px';
+      cvs.style.height = targetH + 'px';
+    }
+  }
   new ResizeObserver(fit).observe(wrap); fit();
 
   const tg = window.Telegram?.WebApp||null; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
