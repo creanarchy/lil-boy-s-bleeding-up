@@ -1599,14 +1599,3 @@ border: 2px solid rgba(126,26,31,0.9);
     top: calc(12px + (100vh - 100vw * 16/9) / 2);
   }
 }
-
-
-/* Desktop-only: keep game area in fixed 9:16, add side borders in fullscreen/large windows */
-@media (pointer: fine) and (min-width: 768px){
-  #wrap{
-    width: calc(100vh * 9/16);
-    height: 100vh;
-    max-width: calc(100vh * 9/16);
-    max-height: 100vh;
-  }
-}

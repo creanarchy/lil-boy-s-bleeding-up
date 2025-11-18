@@ -97,8 +97,8 @@ function solidCapsReady(){ return false; }
   
   
   const __DPR0 = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-  const __MOBILE_GUESS0 =
-    (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+  const __MOBILE_GUESS0 = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
+    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR0 >= 2)
     || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
   const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
