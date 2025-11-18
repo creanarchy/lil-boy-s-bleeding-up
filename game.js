@@ -121,13 +121,7 @@ ctx.imageSmoothingEnabled = false;
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
   var MOBILE_SCALE = IS_MOBILE ? 1.0 : 1.0;
   let W=0, H=0;
-  function fit(){
-    const r = wrap.getBoundingClientRect();
-    W = cvs.width  = Math.round(r.width  * DPR);
-    H = cvs.height = Math.round(r.height * DPR);
-    cvs.style.width  = r.width + 'px';
-    cvs.style.height = r.height + 'px';
-  }
+  function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
 
   const tg = window.Telegram?.WebApp||null; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
@@ -358,9 +352,11 @@ async function renderProgress(tab){
     if (tab === 'bank'){
       const bank = await fetchMyBank();
       MY_BANK = bank || 0;
+      const playerName = (currentPlayer && (currentPlayer.username || currentPlayer.telegram_id)) || '';
       progressTableWrap.innerHTML = `
         <div class="bank-card">
           <div class="bank-label">Банк</div>
+          <div class="bank-player">${playerName}</div>
           <div class="bank-value">
             <img class="drop-ico bank" src="./assets/images/game elements/drop.png" alt=""/>
             ${MY_BANK}

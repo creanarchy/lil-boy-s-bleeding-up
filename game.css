@@ -1577,7 +1577,7 @@ border: 2px solid rgba(126,26,31,0.9);
 .bar::after{ z-index: 1 !important; }
 
 /* ↓↓↓ Username in BANK tab ↓↓↓ */
-.bank-username {
+.bank-player {
     margin-top: 28px !important;
     font-size: 18px !important;
     color: #ffffffcc !important;
@@ -1612,4 +1612,21 @@ border: 2px solid rgba(126,26,31,0.9);
     width: min(100vw, 100vh * 9/16);
     max-width: min(100vw, 100vh * 9/16);
   }
+}
+
+
+/* Ensure BANK layout: value first (drop + number), username below with gap */
+.bank-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.bank-value{
+  order:1;
+}
+
+.bank-player{
+  order:2;
+  margin-top:16px !important;
 }
