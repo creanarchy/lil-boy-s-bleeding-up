@@ -39,7 +39,7 @@ function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width
     const ih = (imgBack.naturalHeight||imgBack.height)||1;
     const scale = W / iw;           
     const tileH = ih * scale;
-    let off = (camY * 0.5 * scale) % tileH; 
+    let off = (camY * 0.5) % tileH; 
     if (off < 0) off += tileH;
     const y1 = px(-off);
     const y2 = px(y1 + tileH);
@@ -97,8 +97,8 @@ function solidCapsReady(){ return false; }
   
   
   const __DPR0 = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-  const __MOBILE_GUESS0 = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR0 >= 2)
+  const __MOBILE_GUESS0 =
+    (window.matchMedia && matchMedia('(pointer:coarse)').matches)
     || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
   const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
