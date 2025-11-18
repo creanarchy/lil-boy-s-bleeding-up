@@ -124,22 +124,29 @@ ctx.imageSmoothingEnabled = false;
   function fit(){
     const r = wrap.getBoundingClientRect();
     if (IS_MOBILE) {
+      // Mobile: игра всегда занимает всю доступную область
       W = cvs.width = Math.round(r.width * DPR);
       H = cvs.height = Math.round(r.height * DPR);
       cvs.style.width = r.width + 'px';
       cvs.style.height = r.height + 'px';
     } else {
       const AR = 9 / 16;
-      let targetH = r.height;
-      let targetW = targetH * AR;
-      if (targetW > r.width) {
-        targetW = r.width;
-        targetH = targetW / AR;
+      const containerAR = r.width / r.height;
+      // Обычный режим: окно почти 9:16 — занимаем всю область без рамок
+      if (containerAR <= AR) {
+        W = cvs.width = Math.round(r.width * DPR);
+        H = cvs.height = Math.round(r.height * DPR);
+        cvs.style.width = r.width + 'px';
+        cvs.style.height = r.height + 'px';
+      } else {
+        // Очень широкий экран (фуллскрин): фиксируем 9:16 и добавляем боковые рамки
+        const targetH = r.height;
+        const targetW = targetH * AR;
+        W = cvs.width = Math.round(targetW * DPR);
+        H = cvs.height = Math.round(targetH * DPR);
+        cvs.style.width = targetW + 'px';
+        cvs.style.height = targetH + 'px';
       }
-      W = cvs.width = Math.round(targetW * DPR);
-      H = cvs.height = Math.round(targetH * DPR);
-      cvs.style.width = targetW + 'px';
-      cvs.style.height = targetH + 'px';
     }
   }
   new ResizeObserver(fit).observe(wrap); fit();
