@@ -39,7 +39,7 @@ function imgReady(im){ return !!(im && im.complete && (im.naturalWidth||im.width
     const ih = (imgBack.naturalHeight||imgBack.height)||1;
     const scale = W / iw;           
     const tileH = ih * scale;
-    let off = (camY * 0.5 * scale) % tileH; 
+    let off = (camY * 0.5) % tileH; 
     if (off < 0) off += tileH;
     const y1 = px(-off);
     const y2 = px(y1 + tileH);
@@ -97,8 +97,8 @@ function solidCapsReady(){ return false; }
   
   
   const __DPR0 = Math.max(1, Math.min(3, window.devicePixelRatio||1));
-  const __MOBILE_GUESS0 = (window.matchMedia && matchMedia('(pointer:coarse)').matches)
-    || (Math.min(window.innerWidth, window.innerHeight) <= 820 && __DPR0 >= 2)
+  const __MOBILE_GUESS0 =
+    (window.matchMedia && matchMedia('(pointer:coarse)').matches)
     || /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent);
   const MOBILE_GEOM_SCALE = __MOBILE_GUESS0 ? 1.50 : 1.0;
   const VHEIGHT = { solid:38, fragile:32, moving:36, spring:36, spike:46 };
@@ -141,54 +141,6 @@ ctx.imageSmoothingEnabled = false;
 const SUPABASE_URL = 'https://xysyawfwdstgfktsxxhl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3lhd2Z3ZHN0Z2ZrdHN4eGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NzEzNDUsImV4cCI6MjA3ODE0NzM0NX0.aspYgKHlOWLg3weHwAYv1we9V2JYbiwE3zORwqZrmEY';
 
-
-const SUPABASE_REST_URL = SUPABASE_URL + '/rest/v1';
-
-function supabaseHeaders(preferRepresentation){
-  const h = {
-    'apikey': SUPABASE_KEY,
-    'Authorization': 'Bearer ' + SUPABASE_KEY,
-    'Content-Type': 'application/json'
-  };
-  if (preferRepresentation) h['Prefer'] = 'return=representation';
-  return h;
-}
-
-async function supabaseGet(path){
-  try{
-    const res = await fetch(SUPABASE_REST_URL + path, {
-      method: 'GET',
-      headers: supabaseHeaders(false)
-    });
-    if (!res.ok){
-      console.error('Supabase REST GET error', res.status, await res.text());
-      return null;
-    }
-    return await res.json();
-  }catch(e){
-    console.error('Supabase REST GET fatal', e);
-    return null;
-  }
-}
-
-async function supabaseMutate(path, method, payload){
-  try{
-    const res = await fetch(SUPABASE_REST_URL + path, {
-      method: method,
-      headers: supabaseHeaders(true),
-      body: JSON.stringify(payload||{})
-    });
-    if (!res.ok){
-      console.error('Supabase REST ' + method + ' error', res.status, await res.text());
-      return null;
-    }
-    return await res.json();
-  }catch(e){
-    console.error('Supabase REST ' + method + ' fatal', e);
-    return null;
-  }
-}
-
 let supabaseClient = null;
 let currentPlayer = {
   telegram_id: null,
@@ -210,19 +162,43 @@ function getSupabase(){
   return supabaseClient;
 }
 
-async function generateFallbackName(){
+async function generateFallbackName(client){
+  
   try{
-    return 'lilboy_' + Math.floor(100000 + Math.random()*900000);
+    const { data, error } = await client
+      .from('scores')
+      .select('telegram_id, created_at')
+      .ilike('telegram_id', 'lilboy_%')
+      .order('created_at', { ascending:false })
+      .limit(1000);
+
+    if (error){
+      console.error('generateFallbackName error', error);
+      return 'lilboy_' + Math.floor(100000 + Math.random()*900000);
+    }
+
+    let maxN = 0;
+    (data||[]).forEach(row=>{
+      const name = row.telegram_id || '';
+      const m = /lilboy_(\d+)/i.exec(name);
+      if (m){
+        const n = parseInt(m[1], 10);
+        if (!Number.isNaN(n) && n>maxN) maxN = n;
+      }
+    });
+    return 'lilboy_' + (maxN+1);
   }catch(e){
     console.error('generateFallbackName fatal', e);
     return 'lilboy_' + Math.floor(100000 + Math.random()*900000);
   }
 }
 
-
 async function initPlayer(){
   if (playerInitPromise) return playerInitPromise;
   playerInitPromise = (async ()=>{
+    const client = getSupabase();
+    if (!client) return;
+
     let username = null;
     try{
       const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
@@ -234,16 +210,24 @@ async function initPlayer(){
     }
 
     if (!username){
-      username = await generateFallbackName();
+      username = await generateFallbackName(client);
     }
 
     currentPlayer.telegram_id = username;
     currentPlayer.username = username;
 
     try{
-      const rows = await supabaseGet('/scores?select=telegram_id,username,score,total_drops&telegram_id=eq.' + encodeURIComponent(username));
-      const row = rows && rows[0];
-      if (!row){
+      const { data, error } = await client
+        .from('scores')
+        .select('telegram_id, username, score, total_drops')
+        .eq('telegram_id', username)
+        .maybeSingle();
+
+      if (error){
+        console.error('load player error', error);
+      }
+
+      if (!data){
         const insertPayload = {
           telegram_id: username,
           username: username,
@@ -251,15 +235,20 @@ async function initPlayer(){
           total_drops: 0,
           game_id: 'lilboy_bleeding_up'
         };
-        const insertedRows = await supabaseMutate('/scores', 'POST', insertPayload);
-        const inserted = insertedRows && insertedRows[0];
-        if (inserted){
+        const { data: inserted, error: insertErr } = await client
+          .from('scores')
+          .insert(insertPayload)
+          .select('telegram_id, username, score, total_drops')
+          .single();
+        if (insertErr){
+          console.error('create player error', insertErr);
+        }else if (inserted){
           currentPlayer.score = inserted.score || 0;
           currentPlayer.total_drops = inserted.total_drops || 0;
         }
       }else{
-        currentPlayer.score = (row && row.score) || 0;
-        currentPlayer.total_drops = (row && row.total_drops) || 0;
+        currentPlayer.score = data.score || 0;
+        currentPlayer.total_drops = data.total_drops || 0;
       }
     }catch(e){
       console.error('initPlayer fatal', e);
@@ -268,8 +257,9 @@ async function initPlayer(){
   return playerInitPromise;
 }
 
-
 async function saveRunToSupabase(){
+  const client = getSupabase();
+  if (!client) return;
   try{
     await initPlayer();
     if (!currentPlayer.telegram_id) return;
@@ -280,42 +270,68 @@ async function saveRunToSupabase(){
     const addedDrops = Number(dropsCollected || 0);
     const newTotalDrops = Number(currentPlayer.total_drops || 0) + addedDrops;
 
-    const payload = {
-      score: newBestScore,
-      total_drops: newTotalDrops
-    };
-    const rows = await supabaseMutate('/scores?telegram_id=eq.' + encodeURIComponent(currentPlayer.telegram_id), 'PATCH', payload);
-    const row = rows && rows[0];
+    const { data, error } = await client
+      .from('scores')
+      .update({
+        score: newBestScore,
+        total_drops: newTotalDrops
+      })
+      .eq('telegram_id', currentPlayer.telegram_id)
+      .select('score, total_drops')
+      .single();
 
-    currentPlayer.score = (row && row.score) != null ? row.score : newBestScore;
-    currentPlayer.total_drops = (row && row.total_drops) != null ? row.total_drops : newTotalDrops;
+    if (error){
+      console.error('saveRun error', error);
+      return;
+    }
+
+    currentPlayer.score = (data && data.score) != null ? data.score : newBestScore;
+    currentPlayer.total_drops = (data && data.total_drops) != null ? data.total_drops : newTotalDrops;
   }catch(e){
     console.error('saveRunToSupabase fatal', e);
   }
 }
 
-
 async function fetchLeaderboard(orderField){
+  const client = getSupabase();
+  if (!client) return [];
   try{
     await initPlayer();
-    const field = (orderField === 'total_drops') ? 'total_drops' : 'score';
-    const rows = await supabaseGet('/scores?select=telegram_id,username,score,total_drops&order=' + encodeURIComponent(field) + '.desc&limit=50');
-    return rows || [];
+    const { data, error } = await client
+      .from('scores')
+      .select('telegram_id, username, score, total_drops')
+      .order(orderField, { ascending:false })
+      .limit(50);
+
+    if (error){
+      console.error('fetchLeaderboard error', error);
+      return [];
+    }
+    return data || [];
   }catch(e){
     console.error('fetchLeaderboard fatal', e);
     return [];
   }
 }
 
-
 async function fetchMyBank(){
+  const client = getSupabase();
+  if (!client) return 0;
   try{
     await initPlayer();
     if (!currentPlayer.telegram_id) return 0;
 
-    const rows = await supabaseGet('/scores?select=total_drops&telegram_id=eq.' + encodeURIComponent(currentPlayer.telegram_id));
-    const row = rows && rows[0];
-    const bank = Number(row && row.total_drops != null ? row.total_drops : 0);
+    const { data, error } = await client
+      .from('scores')
+      .select('total_drops')
+      .eq('telegram_id', currentPlayer.telegram_id)
+      .maybeSingle();
+
+    if (error){
+      console.error('fetchMyBank error', error);
+      return currentPlayer.total_drops || 0;
+    }
+    const bank = Number(data && data.total_drops != null ? data.total_drops : 0);
     currentPlayer.total_drops = bank;
     return bank;
   }catch(e){
@@ -323,7 +339,6 @@ async function fetchMyBank(){
     return currentPlayer.total_drops || 0;
   }
 }
-
 
 
 let MY_BANK = 0;
@@ -337,9 +352,11 @@ async function renderProgress(tab){
     if (tab === 'bank'){
       const bank = await fetchMyBank();
       MY_BANK = bank || 0;
+      const playerName = (currentPlayer && (currentPlayer.username || currentPlayer.telegram_id)) || '';
       progressTableWrap.innerHTML = `
         <div class="bank-card">
           <div class="bank-label">Банк</div>
+          <div class="bank-player">${playerName}</div>
           <div class="bank-value">
             <img class="drop-ico bank" src="./assets/images/game elements/drop.png" alt=""/>
             ${MY_BANK}
