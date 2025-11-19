@@ -376,6 +376,7 @@ async function renderProgress(tab){
     if (tab === 'bank'){
       const bank = await fetchMyBank();
       MY_BANK = bank || 0;
+      const playerName = (currentPlayer && (currentPlayer.username || currentPlayer.telegram_id)) || '';
       progressTableWrap.innerHTML = `
         <div class="bank-card">
           <div class="bank-label">Банк</div>
@@ -383,6 +384,7 @@ async function renderProgress(tab){
             <img class="drop-ico bank" src="./assets/images/game elements/drop.png" alt=""/>
             ${MY_BANK}
           </div>
+          <div class="bank-player">${playerName}</div>
         </div>
       `;
       return;
