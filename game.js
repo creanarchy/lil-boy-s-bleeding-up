@@ -116,14 +116,20 @@ function solidCapsReady(){ return false; }
     return Math.max(8, Math.round(w0 * s));
   }
 ctx.imageSmoothingEnabled = false;
-  const RAW_DPR = window.devicePixelRatio||1;
-  const IS_WINDOWS = /Windows/i.test(navigator.userAgent);
-  const DPR  = Math.max(1, Math.min(3, IS_WINDOWS ? 2 : RAW_DPR));
   var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
+  var IS_WINDOWS = /Windows/i.test(navigator.userAgent);
+  const DPR_RAW  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
+  const DPR      = (!IS_MOBILE && IS_WINDOWS) ? 1 : DPR_RAW;
   var MOBILE_SCALE = IS_MOBILE ? 1.0 : 1.0;
   let W=0, H=0;
-  function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
+  function fit(){
+    const r = wrap.getBoundingClientRect();
+    W = cvs.width  = Math.round(r.width  * DPR);
+    H = cvs.height = Math.round(r.height * DPR);
+    cvs.style.width  = r.width + 'px';
+    cvs.style.height = r.height + 'px';
+  }
   new ResizeObserver(fit).observe(wrap); fit();
 
   const tg = window.Telegram?.WebApp||null; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
@@ -143,7 +149,14 @@ ctx.imageSmoothingEnabled = false;
 const SUPABASE_URL = 'https://xysyawfwdstgfktsxxhl.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5c3lhd2Z3ZHN0Z2ZrdHN4eGhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NzEzNDUsImV4cCI6MjA3ODE0NzM0NX0.aspYgKHlOWLg3weHwAYv1we9V2JYbiwE3zORwqZrmEY';
 
-let supabaseClient = null;
+function supabaseHeaders(){
+  return {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  };
+}
+
 let currentPlayer = {
   telegram_id: null,
   username: null,
@@ -152,35 +165,25 @@ let currentPlayer = {
 };
 let playerInitPromise = null;
 
-function getSupabase(){
-  if (supabaseClient) return supabaseClient;
+async function generateFallbackName(){
   try{
-    if (window.supabase && window.supabase.createClient){
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-  }catch(e){
-    console.error('Supabase init error', e);
-  }
-  return supabaseClient;
-}
+    const url = new URL(SUPABASE_URL + '/rest/v1/scores');
+    url.searchParams.set('select', 'telegram_id,created_at');
+    url.searchParams.set('telegram_id', 'ilike.lilboy_%');
+    url.searchParams.set('order', 'created_at.desc');
+    url.searchParams.set('limit', '1000');
 
-async function generateFallbackName(client){
-  
-  try{
-    const { data, error } = await client
-      .from('scores')
-      .select('telegram_id, created_at')
-      .ilike('telegram_id', 'lilboy_%')
-      .order('created_at', { ascending:false })
-      .limit(1000);
-
-    if (error){
-      console.error('generateFallbackName error', error);
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: supabaseHeaders()
+    });
+    if (!res.ok){
+      console.error('generateFallbackName response error', res.status);
       return 'lilboy_' + Math.floor(100000 + Math.random()*900000);
     }
-
+    const data = await res.json();
     let maxN = 0;
-    (data||[]).forEach(row=>{
+    (data || []).forEach(row=>{
       const name = row.telegram_id || '';
       const m = /lilboy_(\d+)/i.exec(name);
       if (m){
@@ -198,9 +201,6 @@ async function generateFallbackName(client){
 async function initPlayer(){
   if (playerInitPromise) return playerInitPromise;
   playerInitPromise = (async ()=>{
-    const client = getSupabase();
-    if (!client) return;
-
     let username = null;
     try{
       const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
@@ -212,24 +212,30 @@ async function initPlayer(){
     }
 
     if (!username){
-      username = await generateFallbackName(client);
+      username = await generateFallbackName();
     }
 
     currentPlayer.telegram_id = username;
     currentPlayer.username = username;
 
     try{
-      const { data, error } = await client
-        .from('scores')
-        .select('telegram_id, username, score, total_drops')
-        .eq('telegram_id', username)
-        .maybeSingle();
+      const url = new URL(SUPABASE_URL + '/rest/v1/scores');
+      url.searchParams.set('select', 'telegram_id,username,score,total_drops');
+      url.searchParams.set('telegram_id', 'eq.' + username);
+      url.searchParams.set('limit', '1');
 
-      if (error){
-        console.error('load player error', error);
+      const res = await fetch(url.toString(), {
+        method: 'GET',
+        headers: supabaseHeaders()
+      });
+      if (!res.ok){
+        console.error('load player response error', res.status);
+        return;
       }
+      const data = await res.json();
+      const row = (data && data[0]) || null;
 
-      if (!data){
+      if (!row){
         const insertPayload = {
           telegram_id: username,
           username: username,
@@ -237,20 +243,27 @@ async function initPlayer(){
           total_drops: 0,
           game_id: 'lilboy_bleeding_up'
         };
-        const { data: inserted, error: insertErr } = await client
-          .from('scores')
-          .insert(insertPayload)
-          .select('telegram_id, username, score, total_drops')
-          .single();
-        if (insertErr){
-          console.error('create player error', insertErr);
-        }else if (inserted){
+        const insRes = await fetch(SUPABASE_URL + '/rest/v1/scores', {
+          method: 'POST',
+          headers: {
+            ...supabaseHeaders(),
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(insertPayload)
+        });
+        if (!insRes.ok){
+          console.error('create player response error', insRes.status);
+          return;
+        }
+        const insData = await insRes.json();
+        const inserted = insData && insData[0];
+        if (inserted){
           currentPlayer.score = inserted.score || 0;
           currentPlayer.total_drops = inserted.total_drops || 0;
         }
       }else{
-        currentPlayer.score = data.score || 0;
-        currentPlayer.total_drops = data.total_drops || 0;
+        currentPlayer.score = row.score || 0;
+        currentPlayer.total_drops = row.total_drops || 0;
       }
     }catch(e){
       console.error('initPlayer fatal', e);
@@ -260,8 +273,6 @@ async function initPlayer(){
 }
 
 async function saveRunToSupabase(){
-  const client = getSupabase();
-  if (!client) return;
   try{
     await initPlayer();
     if (!currentPlayer.telegram_id) return;
@@ -272,43 +283,50 @@ async function saveRunToSupabase(){
     const addedDrops = Number(dropsCollected || 0);
     const newTotalDrops = Number(currentPlayer.total_drops || 0) + addedDrops;
 
-    const { data, error } = await client
-      .from('scores')
-      .update({
+    const url = new URL(SUPABASE_URL + '/rest/v1/scores');
+    url.searchParams.set('telegram_id', 'eq.' + currentPlayer.telegram_id);
+
+    const res = await fetch(url.toString(), {
+      method: 'PATCH',
+      headers: {
+        ...supabaseHeaders(),
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
         score: newBestScore,
         total_drops: newTotalDrops
       })
-      .eq('telegram_id', currentPlayer.telegram_id)
-      .select('score, total_drops')
-      .single();
-
-    if (error){
-      console.error('saveRun error', error);
+    });
+    if (!res.ok){
+      console.error('saveRun response error', res.status);
       return;
     }
-
-    currentPlayer.score = (data && data.score) != null ? data.score : newBestScore;
-    currentPlayer.total_drops = (data && data.total_drops) != null ? data.total_drops : newTotalDrops;
+    const data = await res.json();
+    const row = data && data[0];
+    currentPlayer.score = (row && row.score) != null ? row.score : newBestScore;
+    currentPlayer.total_drops = (row && row.total_drops) != null ? row.total_drops : newTotalDrops;
   }catch(e){
     console.error('saveRunToSupabase fatal', e);
   }
 }
 
 async function fetchLeaderboard(orderField){
-  const client = getSupabase();
-  if (!client) return [];
   try{
     await initPlayer();
-    const { data, error } = await client
-      .from('scores')
-      .select('telegram_id, username, score, total_drops')
-      .order(orderField, { ascending:false })
-      .limit(50);
+    const url = new URL(SUPABASE_URL + '/rest/v1/scores');
+    url.searchParams.set('select', 'telegram_id,username,score,total_drops');
+    url.searchParams.set('order', orderField + '.desc');
+    url.searchParams.set('limit', '50');
 
-    if (error){
-      console.error('fetchLeaderboard error', error);
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: supabaseHeaders()
+    });
+    if (!res.ok){
+      console.error('fetchLeaderboard response error', res.status);
       return [];
     }
+    const data = await res.json();
     return data || [];
   }catch(e){
     console.error('fetchLeaderboard fatal', e);
@@ -317,23 +335,26 @@ async function fetchLeaderboard(orderField){
 }
 
 async function fetchMyBank(){
-  const client = getSupabase();
-  if (!client) return 0;
   try{
     await initPlayer();
     if (!currentPlayer.telegram_id) return 0;
 
-    const { data, error } = await client
-      .from('scores')
-      .select('total_drops')
-      .eq('telegram_id', currentPlayer.telegram_id)
-      .maybeSingle();
+    const url = new URL(SUPABASE_URL + '/rest/v1/scores');
+    url.searchParams.set('select', 'total_drops');
+    url.searchParams.set('telegram_id', 'eq.' + currentPlayer.telegram_id);
+    url.searchParams.set('limit', '1');
 
-    if (error){
-      console.error('fetchMyBank error', error);
+    const res = await fetch(url.toString(), {
+      method: 'GET',
+      headers: supabaseHeaders()
+    });
+    if (!res.ok){
+      console.error('fetchMyBank response error', res.status);
       return currentPlayer.total_drops || 0;
     }
-    const bank = Number(data && data.total_drops != null ? data.total_drops : 0);
+    const data = await res.json();
+    const row = data && data[0];
+    const bank = Number(row && row.total_drops != null ? row.total_drops : 0);
     currentPlayer.total_drops = bank;
     return bank;
   }catch(e){
@@ -341,6 +362,9 @@ async function fetchMyBank(){
     return currentPlayer.total_drops || 0;
   }
 }
+
+
+
 
 
 let MY_BANK = 0;
@@ -354,6 +378,7 @@ async function renderProgress(tab){
     if (tab === 'bank'){
       const bank = await fetchMyBank();
       MY_BANK = bank || 0;
+      const playerName = (currentPlayer && (currentPlayer.username || currentPlayer.telegram_id)) || '';
       progressTableWrap.innerHTML = `
         <div class="bank-card">
           <div class="bank-label">Банк</div>
@@ -361,6 +386,7 @@ async function renderProgress(tab){
             <img class="drop-ico bank" src="./assets/images/game elements/drop.png" alt=""/>
             ${MY_BANK}
           </div>
+          <div class="bank-player">${playerName}</div>
         </div>
       `;
       return;
