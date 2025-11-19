@@ -116,9 +116,11 @@ function solidCapsReady(){ return false; }
     return Math.max(8, Math.round(w0 * s));
   }
 ctx.imageSmoothingEnabled = false;
-  const DPR  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
   var IS_MOBILE = /Mobi|Android|iPhone|iPad|iPod|Mobile|CriOS/i.test(navigator.userAgent)
                     || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
+  var IS_WINDOWS = /Windows/i.test(navigator.userAgent);
+  const DPR_RAW  = Math.max(1, Math.min(3, window.devicePixelRatio||1));
+  const DPR      = (!IS_MOBILE && IS_WINDOWS) ? 1 : DPR_RAW;
   var MOBILE_SCALE = IS_MOBILE ? 1.0 : 1.0;
   let W=0, H=0;
   function fit(){
