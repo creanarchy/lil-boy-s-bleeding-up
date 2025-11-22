@@ -735,7 +735,7 @@
 #menu .onebtn{ margin-top: 4px; }
 #menu .onebtn button{
   padding: 14px 28px;
-  border-radius: 16px;
+  border-radius: 10px;
   font-weight: 800;
   letter-spacing: 0.02em;
   font-size: 18px;
@@ -917,7 +917,7 @@ border: 2px solid rgba(126,26,31,0.9);
 #gameover .cta-chrome{
   position: relative;
   padding: 12px 22px;
-  border-radius: 16px;
+  border-radius: 10px;
   font-family: 'Russo One', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   font-weight: 900;
   letter-spacing: .01em;
@@ -1630,3 +1630,139 @@ border: 2px solid rgba(126,26,31,0.9);
   order:2;
   margin-top:16px !important;
 }
+
+
+
+/* ===== Lil Boy preloader ===== */
+body.preloading #menu,
+body.preloading .hud,
+body.preloading .barwrap,
+body.preloading .progress-btn {
+  display: none !important;
+}
+
+#preloader {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  z-index: 20;
+}
+
+/* без фейда: просто убираем прелоудер */
+#preloader.preloader-hide {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pre-inner {
+  margin-top: -40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  width: min(74%, 360px);
+}
+
+.pre-video-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pre-video {
+  width: 96px;
+  height: auto;
+  image-rendering: auto;
+}
+
+/* немного меньше на узких экранах */
+@media (max-width: 480px) {
+  .pre-inner {
+    margin-top: -40px;
+    width: min(88%, 320px);
+  }
+  .pre-video {
+    width: 80px;
+  }
+}
+
+/* мини-версия игрового бара по визуалу, но меньше по ширине */
+.pre-bar {
+  position: relative;
+  width: min(48%, 230px);
+  height: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(140% 160% at 50% -30%, rgba(255,255,255,.04), transparent 46%),
+    linear-gradient(180deg,
+      #6b7787 0%,
+      #4b5563 12%,
+      #2f3641 28%,
+      #1b2028 50%,
+      #2f3641 72%,
+      #4b5563 88%,
+      #6b7787 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.45),
+    0 2px 6px rgba(0,0,0,.5),
+    0 0 0 1px rgba(0,0,0,.35);
+  margin-top: 16px;
+}
+
+/* внутренний клип-контейнер, чтобы красная полоса не вылезала за рамку */
+.pre-bar-inner {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,.45),
+    inset 0 -2px 6px rgba(0,0,0,.4),
+    inset 0 0 0 1px rgba(255,255,255,.05);
+}
+
+/* красная полоска: визуал близкий к игровому fill, без верхней белой полосы */
+.pre-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  border-radius: 12px;
+  background:
+    radial-gradient(165% 150% at 20% -20%, rgba(255,255,255,.45), rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, #ff9c92 0%, #ff3d36 30%, #c3171d 68%, #6e0d14 100%);
+  box-shadow:
+    inset 0 2px 6px rgba(255,255,255,.25),
+    inset 0 -3px 6px rgba(0,0,0,.45),
+    0 0 10px rgba(241,58,83,0.35);
+  filter: saturate(1.5);
+  transition: width 0.12s linear;
+}
+
+
+/* ===== Preloader logos (bottom) ===== */
+#preloader::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2%;
+  width: min(72%, 336px);
+  aspect-ratio: 420 / 120;
+  background: url("./assets/images/preloader/logos.png") no-repeat center/contain;
+  pointer-events: none;
+  opacity: 0.95;
+}
+

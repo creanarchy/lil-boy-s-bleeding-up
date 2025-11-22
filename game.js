@@ -1,3 +1,5 @@
+try{ document.body.classList.add('preloading'); }catch(e){}
+
 (function(){
   function setVH(){
     var vh = window.innerHeight * 0.01;
@@ -1389,4 +1391,95 @@ addDropOnPlatform(start, 0, 36);
       if(ensure()){ fill.classList.remove('damage'); }
     });
   }catch(e){}
+})();
+
+
+/* ===== Lil Boy preloader ===== */
+(function(){
+  var wrap = document.getElementById('wrap');
+  if (!wrap) return;
+
+  var pre = document.createElement('div');
+  pre.id = 'preloader';
+  pre.innerHTML =
+    '<div class="pre-inner">' +
+    '  <div class="pre-video-wrap">' +
+    '    <video class="pre-video" src="./assets/images/preloader/lilboy_preloader.webm" autoplay muted loop playsinline></video>' +
+    '  </div>' +
+    '  <div class="pre-bar"><div class="pre-bar-inner"><div class="pre-fill"></div></div></div>' +
+    '</div>';
+
+  wrap.appendChild(pre);
+
+  var fill = pre.querySelector('.pre-fill');
+  var progress = 0;
+
+  function setProgress(p){
+    if (!fill) return;
+    p = Math.max(0, Math.min(1, p));
+    progress = p;
+    fill.style.width = (p * 100).toFixed(1) + '%';
+  }
+
+  var startedAt = performance.now();
+  var MIN_MS = 2000; // минимум 2 секунды
+  var loadTime = null;
+  var endTime = null;
+  var finished = false;
+
+  window.addEventListener('load', function(){
+    loadTime = performance.now();
+  });
+
+  function finish(){
+    if (finished) return;
+    finished = true;
+    try { setProgress(1); } catch(e){}
+    setTimeout(function(){
+      try{
+        pre.remove();
+      }catch(e){
+        pre.style.display = 'none';
+      }
+      document.body.classList.remove('preloading');
+      try{
+        if (typeof menuEl !== 'undefined' && menuEl){
+          menuEl.style.display = '';
+        }
+        if (typeof refreshProgressButton === 'function'){
+          refreshProgressButton();
+        }
+      }catch(e){}
+    }, 200);
+  }
+
+  function step(){
+    if (!pre || finished) return;
+
+    var now = performance.now();
+
+    if (!loadTime){
+      // Идём от 0 до 0.9 ровно за MIN_MS
+      var t = Math.min(1, (now - startedAt) / MIN_MS);
+      setProgress(0.9 * t);
+    } else {
+      // load уже случился — один раз фиксируем целевое время завершения
+      if (!endTime){
+        var minEnd = startedAt + MIN_MS;
+        // чуть времени на мягкий докат, но не раньше минимума
+        endTime = Math.max(loadTime + 160, minEnd);
+      }
+      var total = endTime - startedAt;
+      var t2 = total > 0 ? Math.min(1, (now - startedAt) / total) : 1;
+      setProgress(t2);
+      if (now >= endTime){
+        finish();
+        return;
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
 })();
