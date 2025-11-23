@@ -14,7 +14,29 @@ const wrap = document.getElementById('wrap');
   const ctx  = cvs.getContext('2d');
 
   
-  function makeImg(src){ const im=new Image(); im.src=src; return im; }
+  // Регистрируем все игровые изображения, чтобы прелоудер мог дождаться именно их
+  let GAME_IMG_TOTAL = 0;
+  let GAME_IMG_LOADED = 0;
+
+  function registerGameImg(im){
+    GAME_IMG_TOTAL++;
+    const onDone = function(){
+      GAME_IMG_LOADED++;
+      im.removeEventListener('load', onDone);
+      im.removeEventListener('error', onDone);
+    };
+    im.addEventListener('load', onDone);
+    im.addEventListener('error', onDone);
+  }
+
+  function makeImg(src){
+    const im = new Image();
+    try{
+      registerGameImg(im);
+    }catch(e){}
+    im.src = src;
+    return im;
+  }
   const imgFragile = makeImg("./assets/images/platforms/platform_fragile.png");
   const imgMoving  = makeImg("./assets/images/platforms/platform_moving.png");
   const imgSpring  = makeImg("./assets/images/platforms/platform_spring.png");
@@ -1443,9 +1465,22 @@ addDropOnPlatform(start, 0, 36);
   var loadTime = null;
   var endTime = null;
   var finished = false;
+  var domLoaded = false;
+
+  // Проверяем, что загрузился DOM и все игровые изображения
+  function coreAssetsReady(){
+    try{
+      if (!domLoaded) return false;
+      if (typeof GAME_IMG_TOTAL === 'undefined' || typeof GAME_IMG_LOADED === 'undefined') return true;
+      if (GAME_IMG_TOTAL === 0) return true;
+      return GAME_IMG_LOADED >= GAME_IMG_TOTAL;
+    }catch(e){
+      return domLoaded;
+    }
+  }
 
   window.addEventListener('load', function(){
-    loadTime = performance.now();
+    domLoaded = true;
   });
 
   function finish(){
@@ -1475,13 +1510,15 @@ addDropOnPlatform(start, 0, 36);
 
     var now = performance.now();
 
-    if (!loadTime){
-      // Идём от 0 до 0.9 ровно за MIN_MS
+    // Ждём не только загрузку DOM, но и всех игровых картинок
+    if (typeof coreAssetsReady === 'function' ? !coreAssetsReady() : !loadTime){
       var t = Math.min(1, (now - startedAt) / MIN_MS);
-      // Пока спрайт не готов, можем накапливать прогресс «внутри», но пользователь видит только спин
       var visibleP = spriteReady ? 0.9 * t : 0;
       setProgress(visibleP);
     } else {
+      if (!loadTime){
+        loadTime = now;
+      }
       // load уже случился — один раз фиксируем целевое время завершения
       if (!endTime){
         var minEnd = startedAt + MIN_MS;
