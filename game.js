@@ -1412,7 +1412,24 @@ addDropOnPlatform(start, 0, 36);
   wrap.appendChild(pre);
 
   var fill = pre.querySelector('.pre-fill');
+  var barEl = pre.querySelector('.pre-bar');
   var progress = 0;
+
+  // Сначала прячем прогресс-бар, чтобы он не появлялся раньше спрайта
+  if (barEl) {
+    barEl.style.opacity = '0';
+  }
+
+  // Явно прогружаем спрайт, чтобы понимать, когда он готов анимироваться
+  var spriteReady = false;
+  var spriteImg = new Image();
+  spriteImg.onload = function(){
+    spriteReady = true;
+    if (barEl) {
+      barEl.style.opacity = '1';
+    }
+  };
+  spriteImg.src = "./assets/images/preloader/lilboy_spin_sprite.png";
 
   function setProgress(p){
     if (!fill) return;
@@ -1461,7 +1478,9 @@ addDropOnPlatform(start, 0, 36);
     if (!loadTime){
       // Идём от 0 до 0.9 ровно за MIN_MS
       var t = Math.min(1, (now - startedAt) / MIN_MS);
-      setProgress(0.9 * t);
+      // Пока спрайт не готов, можем накапливать прогресс «внутри», но пользователь видит только спин
+      var visibleP = spriteReady ? 0.9 * t : 0;
+      setProgress(visibleP);
     } else {
       // load уже случился — один раз фиксируем целевое время завершения
       if (!endTime){
