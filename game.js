@@ -1404,7 +1404,7 @@ addDropOnPlatform(start, 0, 36);
   pre.innerHTML =
     '<div class="pre-inner">' +
     '  <div class="pre-video-wrap">' +
-    '    <video class="pre-video" src="./assets/images/preloader/lilboy_preloader.webm" autoplay muted loop playsinline></video>' +
+    '    <video class="pre-video" src="./assets/images/preloader/lilboy_preloader.webm" poster="./assets/images/preloader/lilboy_poster.png" autoplay muted loop playsinline></video>' +
     '  </div>' +
     '  <div class="pre-bar"><div class="pre-bar-inner"><div class="pre-fill"></div></div></div>' +
     '</div>';
