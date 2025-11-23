@@ -1675,11 +1675,7 @@ body.preloading .progress-btn {
   justify-content: center;
 }
 
-.pre-video {
-  width: 96px;
-  height: auto;
-  image-rendering: auto;
-}
+
 
 /* немного меньше на узких экранах */
 @media (max-width: 480px) {
@@ -1687,9 +1683,7 @@ body.preloading .progress-btn {
     margin-top: -40px;
     width: min(88%, 320px);
   }
-  .pre-video {
-    width: 80px;
-  }
+  
 }
 
 /* мини-версия игрового бара по визуалу, но меньше по ширине */
@@ -1766,3 +1760,19 @@ body.preloading .progress-btn {
   opacity: 0.95;
 }
 
+
+
+.pre-video {
+  width: 80px;
+  height: 80px;
+  background-image: url("./assets/images/preloader/lilboy_spin_sprite.png");
+  background-repeat: no-repeat;
+  background-size: 3840px 80px; /* exact pixel size */
+  image-rendering: pixelated;
+  animation: pre-spin 2s steps(48) infinite;
+}
+
+@keyframes pre-spin {
+  from { background-position: 0px 0; }
+  to   { background-position: -3840px 0; } /* -48*80, полный цикл спрайта без дрейфа */
+}
