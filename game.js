@@ -18,6 +18,22 @@ const wrap = document.getElementById('wrap');
   let GAME_IMG_TOTAL = 0;
   let GAME_IMG_LOADED = 0;
 
+  let GAME_AUDIO_TOTAL = 0;
+  let GAME_AUDIO_LOADED = 0;
+
+  function registerGameAudio(audio){
+    try{
+      GAME_AUDIO_TOTAL++;
+      const onDone = function(){
+        GAME_AUDIO_LOADED++;
+        audio.removeEventListener('canplaythrough', onDone);
+        audio.removeEventListener('error', onDone);
+      };
+      audio.addEventListener('canplaythrough', onDone, { once: true });
+      audio.addEventListener('error', onDone, { once: true });
+    }catch(e){}
+  }
+
   function registerGameImg(im){
     GAME_IMG_TOTAL++;
     const onDone = function(){
@@ -37,6 +53,66 @@ const wrap = document.getElementById('wrap');
     im.src = src;
     return im;
   }
+
+  const Sound = (function(){
+    const sounds = {};
+    let enabled = true;
+    let masterVolume = 0.85;
+
+    function load(name, src){
+      try{
+        const audio = new Audio();
+        audio.src = src;
+        audio.preload = "auto";
+        registerGameAudio(audio);
+        sounds[name] = audio;
+      }catch(e){}
+    }
+
+    function play(name, opts){
+      if (!enabled) return;
+      const base = sounds[name];
+      if (!base) return;
+      try{
+        const a = base.cloneNode();
+        const vol = (opts && typeof opts.volume === "number") ? opts.volume : 1;
+        const rate = (opts && typeof opts.rate === "number") ? opts.rate : 1;
+        a.volume = Math.max(0, Math.min(1, masterVolume * vol));
+        a.playbackRate = rate;
+        a.play().catch(function(){});
+      }catch(e){}
+    }
+
+    function setEnabled(v){
+      enabled = !!v;
+    }
+
+    function isEnabled(){
+      return enabled;
+    }
+
+    return { load, play, setEnabled, isEnabled };
+  })();
+
+  const SOUND_STORAGE_KEY = 'lb_sound_enabled';
+
+  (function(){
+    try{
+      const saved = localStorage.getItem(SOUND_STORAGE_KEY);
+      if (saved !== null){
+        Sound.setEnabled(saved === '1');
+      }
+    }catch(e){}
+  })();
+
+  // SFX: твердая/движущая, прыгучая, исчезающая, шипы, сбор капли, падение
+  Sound.load("solid",   "./assets/audio/solid.wav");
+  Sound.load("spring",  "./assets/audio/spring.wav");
+  Sound.load("fragile", "./assets/audio/fragile.wav");
+  Sound.load("spike",   "./assets/audio/spike.wav");
+  Sound.load("drop",    "./assets/audio/drop.wav");
+  Sound.load("falling", "./assets/audio/falling.wav");
+
   const imgFragile = makeImg("./assets/images/platforms/platform_fragile.png");
   const imgMoving  = makeImg("./assets/images/platforms/platform_moving.png");
   const imgSpring  = makeImg("./assets/images/platforms/platform_spring.png");
@@ -158,6 +234,43 @@ ctx.imageSmoothingEnabled = false;
   const startBtn=document.getElementById('startBtn'), howBtn=document.getElementById('howBtn'), againBtn=document.getElementById('againBtn'), shareBtn=document.getElementById('shareBtn');
   const progressBtn=document.getElementById('progressBtn');
   const progressOverlay=document.getElementById('progressOverlay');
+
+  let soundBtn = document.getElementById('soundBtn');
+
+  function syncSoundButtonUI(){
+    if (!soundBtn) return;
+    try{
+      if (Sound.isEnabled()){
+        soundBtn.classList.remove('muted');
+      } else {
+        soundBtn.classList.add('muted');
+      }
+    }catch(e){}
+  }
+
+  if (!soundBtn && wrap){
+    soundBtn = document.createElement('button');
+    soundBtn.id = 'soundBtn';
+    soundBtn.type = 'button';
+    soundBtn.className = 'sound-btn';
+    wrap.appendChild(soundBtn);
+  }
+
+  if (soundBtn){
+    syncSoundButtonUI();
+    soundBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      try{
+        const enabled = Sound.isEnabled();
+        Sound.setEnabled(!enabled);
+        try{
+          localStorage.setItem(SOUND_STORAGE_KEY, Sound.isEnabled() ? '1' : '0');
+        }catch(_){}
+      }catch(_){}
+      syncSoundButtonUI();
+    });
+  }
+
   const progressTableWrap=document.getElementById('progressTable');
   const progressTabs=document.querySelectorAll('[data-progress-tab]');
   const progressCloseBtn=document.getElementById('progressClose');
@@ -474,11 +587,13 @@ if (progressTabs && progressTabs.length){
 }
 
 function refreshProgressButton(){
-  if (!progressBtn) return;
-  if (state === STATE.MENU || state === STATE.OVER){
-    progressBtn.style.display = 'flex';
-  }else{
-    progressBtn.style.display = 'none';
+  if (!progressBtn && !soundBtn) return;
+  const show = (state === STATE.MENU || state === STATE.OVER);
+  if (progressBtn){
+    progressBtn.style.display = show ? 'flex' : 'none';
+  }
+  if (soundBtn){
+    soundBtn.style.display = show ? 'flex' : 'none';
   }
 }
 const imgPlayer=new Image(); imgPlayer.src='./assets/images/lil boy/lil boy.png';
@@ -497,6 +612,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   const STATE={MENU:0,PLAY:1,OVER:2}; let state=STATE.MENU;
   const player={x:0,y:0,r:28,vx:0,vy:0, sx:1, sy:1, landBounce:0};
   let blood=1, drainPerSec=0.085, dropRefill=0.18; let lastSpringAt=-999; let springRings=[]; let lastSpikeAt=-999; let spikeRings=[];
+  let timeSinceGround = 0;
   let heightTop=0, score=0, dropsCollected=0;
   const bestKey='lb_bleeding_best'; let best=Number(localStorage.getItem(bestKey)||0); hudBest.textContent=best;
 
@@ -820,6 +936,11 @@ addDropOnPlatform(start, 0, 36);
   }
 
   function gameOver(reason='blood'){
+    try{
+      if (reason === 'blood' && typeof Sound !== 'undefined' && Sound.play){
+        Sound.play("falling", { volume: 0.9, rate: 1.0 });
+      }
+    }catch(e){}
     input.dir=0; touchX=null;
     state=STATE.OVER;
     overEl.style.display=''; document.body.classList.add('over');
@@ -843,6 +964,7 @@ addDropOnPlatform(start, 0, 36);
   }
 
   function update(dt, dtMs){
+    timeSinceGround += dt;
     if (camKick>0){ camKick = Math.max(0, camKick - dt*18); }
 
     if (hitTimer>0){ hitTimer -= dtMs; if (hitTimer<0) hitTimer=0; }
@@ -861,7 +983,18 @@ addDropOnPlatform(start, 0, 36);
     const bottomY  = cameraY + H;
     const cleanupY = bottomY + 120;
 
-    if (player.y + player.r > bottomY) return gameOver('fall');
+    if (player.y + player.r > bottomY){
+      try{
+        var maxFallTime = 1.4;
+        var tFall = Math.max(0, Math.min(1, timeSinceGround / maxFallTime));
+        var volFall = 0.55 + 0.35 * tFall;
+        var rateFall = 1.15 - 0.25 * tFall;
+        if (typeof Sound !== 'undefined' && Sound.play){
+          Sound.play("falling", { volume: volFall, rate: rateFall });
+        }
+      }catch(e){}
+      return gameOver('fall');
+    }
 
     const step = Math.min(SPACING, REACH_Y);
     const currentHeight = Math.max(0, Math.round((H*0.82 - player.y) / step));
@@ -905,6 +1038,7 @@ addDropOnPlatform(start, 0, 36);
     const prevFoot = prevY + player.r;
     const foot     = player.y + player.r;
     let landed = false;
+    let landedType = null;
     for (let i=0;i<platforms.length;i++){
       const p=platforms[i];
       if (player.vy > 0 && withinXWrap(player.x, p) && prevFoot <= p.y && foot >= p.y){
@@ -912,10 +1046,28 @@ addDropOnPlatform(start, 0, 36);
         player.vy = (p.type==='spring' ? JUMP*1.6 : JUMP);
         if (p.type==='spike'){ blood = Math.max(0, blood - 0.07); spawnBloodSplash(player.x, player.y); hitTimer=160; camKick=4; try{ navigator.vibrate(25);}catch(e){} }
         landed = true;
+        landedType = p.type;
         if (p.type==='fragile' && !p.touched){ p.touched=true; p.ttl=600; }
         try{ navigator.vibrate(10); }catch(e){}
         break;
       }
+    }
+    if (landed){
+      timeSinceGround = 0;
+      try{
+        if (typeof Sound !== 'undefined' && Sound.play){
+          if (landedType === 'spring'){
+            Sound.play("spring", { volume: 1.0 });
+          } else if (landedType === 'fragile'){
+            Sound.play("fragile", { volume: 0.9 });
+          } else if (landedType === 'spike'){
+            Sound.play("spike", { volume: 1.0 });
+          } else {
+            // solid и движущиеся платформы
+            Sound.play("solid", { volume: 0.85 });
+          }
+        }
+      }catch(e){}
     }
 
     
@@ -958,6 +1110,11 @@ addDropOnPlatform(start, 0, 36);
         dropsCollected++; hudDrops.textContent=dropsCollected;
         addDropSparks(d.x, d.y);
         try{ navigator.vibrate(8); }catch(e){}
+        try{
+          if (typeof Sound !== 'undefined' && Sound.play){
+            Sound.play("drop", { volume: 0.9 });
+          }
+        }catch(e){}
       }
     }
 
@@ -1467,13 +1624,26 @@ addDropOnPlatform(start, 0, 36);
   var finished = false;
   var domLoaded = false;
 
-  // Проверяем, что загрузился DOM и все игровые изображения
+  // Проверяем, что загрузился DOM, игровые изображения и звуки
   function coreAssetsReady(){
     try{
       if (!domLoaded) return false;
-      if (typeof GAME_IMG_TOTAL === 'undefined' || typeof GAME_IMG_LOADED === 'undefined') return true;
-      if (GAME_IMG_TOTAL === 0) return true;
-      return GAME_IMG_LOADED >= GAME_IMG_TOTAL;
+
+      var imgsReady = true;
+      if (typeof GAME_IMG_TOTAL !== 'undefined' && typeof GAME_IMG_LOADED !== 'undefined'){
+        if (GAME_IMG_TOTAL > 0){
+          imgsReady = GAME_IMG_LOADED >= GAME_IMG_TOTAL;
+        }
+      }
+
+      var audioReady = true;
+      if (typeof GAME_AUDIO_TOTAL !== 'undefined' && typeof GAME_AUDIO_LOADED !== 'undefined'){
+        if (GAME_AUDIO_TOTAL > 0){
+          audioReady = GAME_AUDIO_LOADED >= GAME_AUDIO_TOTAL;
+        }
+      }
+
+      return imgsReady && audioReady;
     }catch(e){
       return domLoaded;
     }

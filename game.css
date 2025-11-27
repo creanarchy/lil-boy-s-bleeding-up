@@ -744,7 +744,7 @@
   box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
 #menu .onebtn button:hover{ transform: translateY(-2px); filter: brightness(1.50); }
-#menu .onebtn button:active{ transform: translateY(0); filter: brightness(0.96); }
+#menu .onebtn button:active{ transform: translateY(0); filter: brightness(1.05); }
 
 
 
@@ -821,7 +821,7 @@
 }
 #menu .onebtn #startBtn:active{
   transform: translateY(0);
-  filter: brightness(0.96);
+  filter: brightness(1.05);
 }
 
 
@@ -869,7 +869,7 @@
     inset 0 1px 0 rgba(255,255,255,.5),
     inset 0 -2px 0 rgba(0,0,0,.5);
 }
-#menu .start-cta:active{ transform: translateY(0); filter: brightness(0.96); }
+#menu .start-cta:active{ transform: translateY(0); filter: brightness(1.05); }
 #menu .start-cta:hover{
   transform: translateY(-2px);
   filter: brightness(1.50);
@@ -878,7 +878,7 @@
     inset 0 1px 0 rgba(255,255,255,.42),
     inset 0 -2px 0 rgba(0,0,0,.5);
 }
-#menu .start-cta:active{ transform: translateY(0); filter: brightness(0.96); }
+#menu .start-cta:active{ transform: translateY(0); filter: brightness(1.05); }
 
 
 
@@ -941,7 +941,7 @@ border: 2px solid rgba(126,26,31,0.9);
     inset 0 1px 0 rgba(255,255,255,.45),
     inset 0 -2px 0 rgba(0,0,0,.5);
 }
-#gameover .cta-chrome:active{ transform: translateY(0); filter: brightness(0.96); }
+#gameover .cta-chrome:active{ transform: translateY(0); filter: brightness(1.05); }
 
 
 #gameover .card:not(.card-go){ border-color: transparent; background: transparent; box-shadow: none; }
@@ -1396,7 +1396,7 @@ border: 2px solid rgba(126,26,31,0.9);
 }
 .progress-btn:hover{
   transform: translateY(-1px);
-  filter: drop-shadow(0 0 14px rgba(255,70,80,0.42)) brightness(1.06);
+  filter: brightness(1.15);
 }
 .progress-btn:active{
   transform: translateY(1px);
@@ -1543,16 +1543,16 @@ border: 2px solid rgba(126,26,31,0.9);
 
 
 .progress-btn{
-  filter: drop-shadow(0 0 18px rgba(255,70,80,0.75));
+  filter: none;
   transition: transform 120ms ease, filter 120ms ease;
 }
 .progress-btn:hover{
   transform: translateY(-1px);
-  filter: drop-shadow(0 0 14px rgba(255,70,80,0.42)) brightness(1.06);
+  filter: brightness(1.15);
 }
 .progress-btn:active{
   transform: translateY(0);
-  filter: drop-shadow(0 0 16px rgba(255,60,70,0.85)) brightness(0.96);
+  filter: brightness(1.05);
 }
 
 
@@ -1775,4 +1775,49 @@ body.preloading .progress-btn {
 @keyframes pre-spin {
   from { background-position: 0px 0; }
   to   { background-position: -3840px 0; } /* -48*80, полный цикл спрайта без дрейфа */
+}
+
+/* Sound toggle button */
+.sound-btn{
+  position:absolute;
+  right:12px;
+  top:64px;
+  z-index:6;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:none;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:url("./assets/images/interface/sound_on.png") no-repeat center/contain;
+  box-shadow:none;
+  filter:drop-shadow(0 0 18px rgba(0,0,0,.75));
+  transition:transform 120ms ease, filter 120ms ease;
+}
+
+.sound-btn:hover{
+  transform:translateY(-1px);
+  filter:drop-shadow(0 0 22px rgba(0,0,0,.9)) brightness(1.15);
+}
+
+.sound-btn:active{
+  transform:translateY(1px);
+  filter:drop-shadow(0 4px 16px rgba(0,0,0,.7)) brightness(1.05);
+}
+
+.sound-btn.muted{
+  background-image:url("./assets/images/interface/sound_off.png");
+}
+
+@media (max-aspect-ratio:9/16){
+  .sound-btn{
+    top:calc(12px + (100vh - 100vw * 16/9)/2 + 52px);
+  }
+}
+
+body.preloading .sound-btn{
+  display:none !important;
 }
