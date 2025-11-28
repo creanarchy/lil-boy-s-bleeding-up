@@ -82,7 +82,7 @@ const wrap = document.getElementById('wrap');
     }
 
     function setEnabled(v){
-      enabled = !!v;
+      enabled = true; // force enabled for debugging in Telegram
     }
 
     function isEnabled(){
