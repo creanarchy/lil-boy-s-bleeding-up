@@ -23,14 +23,12 @@ const wrap = document.getElementById('wrap');
 
   function registerGameAudio(audio){
     try{
+      // В Telegram WebView события canplaythrough по аудио могут не приходить,
+      // из-за чего прелоудер навсегда "ждет" звуки.
+      // Считаем аудио загруженным сразу после создания объекта,
+      // чтобы прелоудер опирался только на картинки.
       GAME_AUDIO_TOTAL++;
-      const onDone = function(){
-        GAME_AUDIO_LOADED++;
-        audio.removeEventListener('canplaythrough', onDone);
-        audio.removeEventListener('error', onDone);
-      };
-      audio.addEventListener('canplaythrough', onDone, { once: true });
-      audio.addEventListener('error', onDone, { once: true });
+      GAME_AUDIO_LOADED++;
     }catch(e){}
   }
 
