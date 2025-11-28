@@ -56,6 +56,32 @@ const wrap = document.getElementById('wrap');
     const sounds = {};
     let enabled = true;
     let masterVolume = 0.85;
+    let unlocked = false;
+
+    function unlockAll() {
+      if (unlocked) return;
+      unlocked = true;
+      try {
+        Object.keys(sounds).forEach(function(key){
+          const base = sounds[key];
+          if (!base) return;
+          try {
+            const a = base.cloneNode();
+            a.volume = 0;
+            const p = a.play();
+            if (p && typeof p.then === "function") {
+              p.then(function(){
+                try {
+                  a.pause();
+                  a.currentTime = 0;
+                } catch(e){}
+              }).catch(function(){});
+            }
+          } catch(e){}
+        });
+      } catch(e){}
+    }
+
 
     function load(name, src){
       try{
@@ -91,6 +117,26 @@ const wrap = document.getElementById('wrap');
 
     return { load, play, setEnabled, isEnabled };
   })();
+
+  // Разблокируем аудио в Telegram/WebView на первом действии пользователя
+  (function(){
+    try{
+      function onFirstInteraction(){
+        try{
+          unlockAll();
+        }catch(e){}
+        try{
+          window.removeEventListener('pointerdown', onFirstInteraction);
+          window.removeEventListener('touchstart', onFirstInteraction);
+          window.removeEventListener('keydown', onFirstInteraction);
+        }catch(e){}
+      }
+      window.addEventListener('pointerdown', onFirstInteraction);
+      window.addEventListener('touchstart', onFirstInteraction);
+      window.addEventListener('keydown', onFirstInteraction);
+    }catch(e){}
+  })();
+
 
   const SOUND_STORAGE_KEY = 'lb_sound_enabled';
 
