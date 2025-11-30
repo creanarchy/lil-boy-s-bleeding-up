@@ -1002,10 +1002,13 @@ addDropOnPlatform(start, 0, 36);
   let lastTime=performance.now();
   function loop(now=performance.now()){
     if(state!==STATE.PLAY) return;
-    const dtMs = Math.min(32, now-lastTime); lastTime=now;
+    const rawDtMs = now - lastTime;
+    lastTime = now;
+    const dtMs = Math.min(rawDtMs, 80);
     const dt = dtMs/1000;
     update(dt, dtMs); render(); requestAnimationFrame(loop);
   }
+
 
   function update(dt, dtMs){
     timeSinceGround += dt;
