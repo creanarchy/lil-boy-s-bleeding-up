@@ -52,55 +52,74 @@ const wrap = document.getElementById('wrap');
     return im;
   }
 
-  const Sound = (function(){
-    const sounds = {};
+  
+const Sound = (function(){
+    const sounds = {}; // name -> { pool: Audio[], index:number }
     let enabled = true;
     let masterVolume = 0.85;
     let unlocked = false;
+    const POOL_SIZE = 4;
+
+    function createAudio(src){
+      const audio = new Audio();
+      audio.src = src;
+      audio.preload = "auto";
+      try{
+        registerGameAudio(audio);
+      }catch(e){}
+      return audio;
+    }
 
     function unlockAll() {
       if (unlocked) return;
       unlocked = true;
       try {
         Object.keys(sounds).forEach(function(key){
-          const base = sounds[key];
-          if (!base) return;
-          try {
-            const a = base.cloneNode();
-            a.volume = 0;
-            const p = a.play();
-            if (p && typeof p.then === "function") {
-              p.then(function(){
-                try {
-                  a.pause();
-                  a.currentTime = 0;
-                } catch(e){}
-              }).catch(function(){});
-            }
-          } catch(e){}
+          const bank = sounds[key];
+          if (!bank || !bank.pool) return;
+          bank.pool.forEach(function(a){
+            try {
+              a.volume = 0;
+              const p = a.play();
+              if (p && typeof p.then === "function") {
+                p.then(function(){
+                  try {
+                    a.pause();
+                    a.currentTime = 0;
+                  } catch(e){}
+                }).catch(function(){});
+              }
+            } catch(e){}
+          });
         });
       } catch(e){}
     }
 
-
     function load(name, src){
       try{
-        const audio = new Audio();
-        audio.src = src;
-        audio.preload = "auto";
-        registerGameAudio(audio);
-        sounds[name] = audio;
+        const pool = [];
+        for (let i=0; i<POOL_SIZE; i++){
+          pool.push(createAudio(src));
+        }
+        sounds[name] = { pool: pool, index: 0 };
       }catch(e){}
     }
 
     function play(name, opts){
       if (!enabled) return;
-      const base = sounds[name];
-      if (!base) return;
+      const bank = sounds[name];
+      if (!bank || !bank.pool || !bank.pool.length) return;
       try{
-        const a = base.cloneNode();
+        const pool = bank.pool;
+        const idx = (typeof bank.index === "number" ? bank.index : 0) % pool.length;
+        bank.index = (idx + 1) % pool.length;
+        const a = pool[idx];
         const vol = (opts && typeof opts.volume === "number") ? opts.volume : 1;
         const rate = (opts && typeof opts.rate === "number") ? opts.rate : 1;
+        try{
+          a.pause();
+          a.currentTime = 0;
+        }catch(e){}
         a.volume = Math.max(0, Math.min(1, masterVolume * vol));
         a.playbackRate = rate;
         a.play().catch(function(){});
@@ -108,7 +127,7 @@ const wrap = document.getElementById('wrap');
     }
 
     function setEnabled(v){
-      enabled = true; // force enabled for debugging in Telegram
+      enabled = !!v;
     }
 
     function isEnabled(){
