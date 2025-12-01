@@ -1,4 +1,9 @@
 try{ document.body.classList.add('preloading'); }catch(e){}
+// Скрываем меню сразу через inline style, не дожидаясь CSS
+try{ 
+  var menuEarly = document.getElementById('menu');
+  if(menuEarly) menuEarly.style.display = 'none';
+}catch(e){}
 
 // ========== TELEGRAM WEBAPP FULLSCREEN INIT ==========
 (function initTelegramFullscreen(){
