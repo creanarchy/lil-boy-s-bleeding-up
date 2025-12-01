@@ -52,18 +52,53 @@ const wrap = document.getElementById('wrap');
     return im;
   }
 
+  // ========== ОПТИМИЗИРОВАННАЯ ЗВУКОВАЯ СИСТЕМА ==========
+  // Гибридный подход: Web Audio API для мобильных, HTML5 Audio как fallback
   const Sound = (function(){
-    const sounds = {};
-    const pools = {};
+    let audioContext = null;
+    const buffers = {};           // Web Audio буферы
+    const audioElements = {};     // HTML5 Audio элементы (fallback)
+    const pools = {};             // Пулы для HTML5 Audio
     const poolIndex = {};
-    const CHANNELS_PER_SOUND = 4;
+    const CHANNELS_PER_SOUND = 3;
     let enabled = true;
     let masterVolume = 0.85;
     let unlocked = false;
+    let useWebAudio = false;      // Флаг успешной инициализации Web Audio
 
+    // Создаём AudioContext
+    function getContext() {
+      if (audioContext) return audioContext;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioContext = new AudioContextClass();
+        }
+      } catch(e) {}
+      return audioContext;
+    }
+
+    // Разблокировка аудио на мобильных
     function unlockAll() {
       if (unlocked) return;
       unlocked = true;
+      
+      const ctx = getContext();
+      if (ctx) {
+        try {
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(function(){});
+          }
+          // Тихий звук для разблокировки
+          const buffer = ctx.createBuffer(1, 1, 22050);
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(0);
+        } catch(e) {}
+      }
+      
+      // Также разблокируем HTML5 Audio элементы
       try {
         Object.keys(pools).forEach(function(key){
           const list = pools[key];
@@ -74,10 +109,7 @@ const wrap = document.getElementById('wrap');
             const p = a.play();
             if (p && typeof p.then === "function") {
               p.then(function(){
-                try {
-                  a.pause();
-                  a.currentTime = 0;
-                } catch(e){}
+                try { a.pause(); a.currentTime = 0; } catch(e){}
               }).catch(function(){});
             }
           } catch(e){}
@@ -85,49 +117,125 @@ const wrap = document.getElementById('wrap');
       } catch(e){}
     }
 
-    function load(name, src){
-      try{
+    // Загрузка звука
+    function load(name, src) {
+      registerGameAudio(null);
+      
+      // Всегда создаём HTML5 Audio как fallback
+      try {
         const base = new Audio();
         base.src = src;
         base.preload = "auto";
-        registerGameAudio(base);
-        sounds[name] = base;
+        audioElements[name] = base;
 
         const list = [];
         for (let i = 0; i < CHANNELS_PER_SOUND; i++){
-          try{
+          try {
             const a = base.cloneNode();
+            a.load(); // Принудительная загрузка
             list.push(a);
-          }catch(e){}
+          } catch(e){}
         }
         pools[name] = list;
         poolIndex[name] = 0;
-      }catch(e){}
+      } catch(e){}
+
+      // Пробуем загрузить в Web Audio API (для мобильных)
+      const ctx = getContext();
+      if (ctx) {
+        // Используем XMLHttpRequest вместо fetch (работает с file://)
+        try {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', src, true);
+          xhr.responseType = 'arraybuffer';
+          xhr.onload = function() {
+            if (xhr.status === 200 || xhr.status === 0) { // 0 для file://
+              ctx.decodeAudioData(xhr.response, function(audioBuffer) {
+                buffers[name] = audioBuffer;
+                useWebAudio = true;
+              }, function(err) {
+                // Ошибка декодирования - используем fallback
+              });
+            }
+          };
+          xhr.onerror = function() {
+            // Ошибка загрузки - используем fallback
+          };
+          xhr.send();
+        } catch(e) {}
+      }
     }
 
-    function play(name, opts){
-      if (!enabled) return;
+    // Воспроизведение через Web Audio API
+    function playWebAudio(name, opts) {
+      const ctx = getContext();
+      if (!ctx) return false;
+      
+      const buffer = buffers[name];
+      if (!buffer) return false;
+
+      try {
+        if (ctx.state === 'suspended') {
+          ctx.resume().catch(function(){});
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+
+        const gainNode = ctx.createGain();
+        const vol = (opts && typeof opts.volume === "number") ? opts.volume : 1;
+        gainNode.gain.value = Math.max(0, Math.min(1, masterVolume * vol));
+
+        const rate = (opts && typeof opts.rate === "number") ? opts.rate : 1;
+        source.playbackRate.value = rate;
+
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        source.start(0);
+        return true;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // Воспроизведение через HTML5 Audio (fallback)
+    function playHTML5(name, opts) {
       const list = pools[name];
       if (!list || !list.length) return;
+      
       let idx = poolIndex[name] || 0;
       const a = list[idx];
       poolIndex[name] = (idx + 1) % list.length;
-      try{
+      
+      try {
         const vol = (opts && typeof opts.volume === "number") ? opts.volume : 1;
         const rate = (opts && typeof opts.rate === "number") ? opts.rate : 1;
         a.pause();
-        try{ a.currentTime = 0; }catch(e){}
+        try { a.currentTime = 0; } catch(e){}
         a.volume = Math.max(0, Math.min(1, masterVolume * vol));
         a.playbackRate = rate;
         a.play().catch(function(){});
-      }catch(e){}
+      } catch(e){}
     }
 
-    function setEnabled(v){
+    // Основная функция воспроизведения
+    function play(name, opts) {
+      if (!enabled) return;
+      
+      // Пробуем Web Audio API (быстрее на мобильных)
+      if (useWebAudio && buffers[name]) {
+        if (playWebAudio(name, opts)) return;
+      }
+      
+      // Fallback на HTML5 Audio
+      playHTML5(name, opts);
+    }
+
+    function setEnabled(v) {
       enabled = !!v;
     }
 
-    function isEnabled(){
+    function isEnabled() {
       return enabled;
     }
 
@@ -687,7 +795,6 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
   function randN(seed,n){ return mulberry32((seed ^ (n*0x9e3779b9))>>>0)(); }
   function lerp(a,b,t){ return a+(b-a)*t; }
   function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
-
 
 
 
