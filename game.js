@@ -243,20 +243,68 @@ const wrap = document.getElementById('wrap');
   })();
 
   // Разблокируем аудио в Telegram/WebView на первом действии пользователя
+  // + трюк для обхода iOS silent mode
   (function(){
     try{
+      let unlockAttempted = false;
+      let silentAudio = null;
+      
+      // Тихий MP3 файл в base64 (0.1 сек тишины) - не требует внешнего файла
+      const SILENT_MP3 = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB4P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==";
+      
       function onFirstInteraction(){
+        if (unlockAttempted) return;
+        unlockAttempted = true;
+        
         try{
           Sound.unlockAll();
         }catch(e){}
+        
+        // Главный трюк для iOS silent mode:
+        // Запускаем тихий HTML5 Audio в loop - это переключает iOS
+        // с "ringer channel" на "media channel"
+        try {
+          silentAudio = document.createElement("audio");
+          silentAudio.setAttribute("x-webkit-airplay", "deny");
+          silentAudio.preload = "auto";
+          silentAudio.loop = true;
+          silentAudio.volume = 0.001;
+          silentAudio.src = SILENT_MP3;
+          silentAudio.play().catch(function(){});
+        } catch(e){}
+        
+        // Дополнительная разблокировка Web Audio API
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            const tempCtx = new AudioContextClass();
+            const oscillator = tempCtx.createOscillator();
+            const gain = tempCtx.createGain();
+            gain.gain.value = 0.001;
+            oscillator.connect(gain);
+            gain.connect(tempCtx.destination);
+            oscillator.start(0);
+            oscillator.stop(tempCtx.currentTime + 0.001);
+            
+            if (tempCtx.state === 'suspended') {
+              tempCtx.resume();
+            }
+          }
+        } catch(e){}
+        
         try{
           window.removeEventListener('pointerdown', onFirstInteraction);
           window.removeEventListener('touchstart', onFirstInteraction);
+          window.removeEventListener('touchend', onFirstInteraction);
+          window.removeEventListener('click', onFirstInteraction);
           window.removeEventListener('keydown', onFirstInteraction);
         }catch(e){}
       }
+      
       window.addEventListener('pointerdown', onFirstInteraction);
       window.addEventListener('touchstart', onFirstInteraction);
+      window.addEventListener('touchend', onFirstInteraction);
+      window.addEventListener('click', onFirstInteraction);
       window.addEventListener('keydown', onFirstInteraction);
     }catch(e){}
   })();
