@@ -52,74 +52,71 @@ const wrap = document.getElementById('wrap');
     return im;
   }
 
-  
-const Sound = (function(){
-    const sounds = {}; // name -> { pool: Audio[], index:number }
+  const Sound = (function(){
+    const sounds = {};
+    const pools = {};
+    const poolIndex = {};
+    const CHANNELS_PER_SOUND = 4;
     let enabled = true;
     let masterVolume = 0.85;
     let unlocked = false;
-    const POOL_SIZE = 4;
-
-    function createAudio(src){
-      const audio = new Audio();
-      audio.src = src;
-      audio.preload = "auto";
-      try{
-        registerGameAudio(audio);
-      }catch(e){}
-      return audio;
-    }
 
     function unlockAll() {
       if (unlocked) return;
       unlocked = true;
       try {
-        Object.keys(sounds).forEach(function(key){
-          const bank = sounds[key];
-          if (!bank || !bank.pool) return;
-          bank.pool.forEach(function(a){
-            try {
-              a.volume = 0;
-              const p = a.play();
-              if (p && typeof p.then === "function") {
-                p.then(function(){
-                  try {
-                    a.pause();
-                    a.currentTime = 0;
-                  } catch(e){}
-                }).catch(function(){});
-              }
-            } catch(e){}
-          });
+        Object.keys(pools).forEach(function(key){
+          const list = pools[key];
+          if (!list || !list.length) return;
+          const a = list[0];
+          try {
+            a.volume = 0;
+            const p = a.play();
+            if (p && typeof p.then === "function") {
+              p.then(function(){
+                try {
+                  a.pause();
+                  a.currentTime = 0;
+                } catch(e){}
+              }).catch(function(){});
+            }
+          } catch(e){}
         });
       } catch(e){}
     }
 
     function load(name, src){
       try{
-        const pool = [];
-        for (let i=0; i<POOL_SIZE; i++){
-          pool.push(createAudio(src));
+        const base = new Audio();
+        base.src = src;
+        base.preload = "auto";
+        registerGameAudio(base);
+        sounds[name] = base;
+
+        const list = [];
+        for (let i = 0; i < CHANNELS_PER_SOUND; i++){
+          try{
+            const a = base.cloneNode();
+            list.push(a);
+          }catch(e){}
         }
-        sounds[name] = { pool: pool, index: 0 };
+        pools[name] = list;
+        poolIndex[name] = 0;
       }catch(e){}
     }
 
     function play(name, opts){
       if (!enabled) return;
-      const bank = sounds[name];
-      if (!bank || !bank.pool || !bank.pool.length) return;
+      const list = pools[name];
+      if (!list || !list.length) return;
+      let idx = poolIndex[name] || 0;
+      const a = list[idx];
+      poolIndex[name] = (idx + 1) % list.length;
       try{
-        const pool = bank.pool;
-        const idx = (typeof bank.index === "number" ? bank.index : 0) % pool.length;
-        bank.index = (idx + 1) % pool.length;
-        const a = pool[idx];
         const vol = (opts && typeof opts.volume === "number") ? opts.volume : 1;
         const rate = (opts && typeof opts.rate === "number") ? opts.rate : 1;
-        try{
-          a.pause();
-          a.currentTime = 0;
-        }catch(e){}
+        a.pause();
+        try{ a.currentTime = 0; }catch(e){}
         a.volume = Math.max(0, Math.min(1, masterVolume * vol));
         a.playbackRate = rate;
         a.play().catch(function(){});
@@ -134,7 +131,7 @@ const Sound = (function(){
       return enabled;
     }
 
-    return { load, play, setEnabled, isEnabled };
+    return { load, play, setEnabled, isEnabled, unlockAll };
   })();
 
   // Разблокируем аудио в Telegram/WebView на первом действии пользователя
@@ -142,7 +139,7 @@ const Sound = (function(){
     try{
       function onFirstInteraction(){
         try{
-          unlockAll();
+          Sound.unlockAll();
         }catch(e){}
         try{
           window.removeEventListener('pointerdown', onFirstInteraction);
@@ -1021,13 +1018,10 @@ addDropOnPlatform(start, 0, 36);
   let lastTime=performance.now();
   function loop(now=performance.now()){
     if(state!==STATE.PLAY) return;
-    const rawDtMs = now - lastTime;
-    lastTime = now;
-    const dtMs = Math.min(rawDtMs, 80);
+    const dtMs = Math.min(32, now-lastTime); lastTime=now;
     const dt = dtMs/1000;
     update(dt, dtMs); render(); requestAnimationFrame(loop);
   }
-
 
   function update(dt, dtMs){
     timeSinceGround += dt;
