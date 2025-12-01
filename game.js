@@ -249,20 +249,33 @@ const wrap = document.getElementById('wrap');
       let unlockAttempted = false;
       let silentAudio = null;
       
-      // Тихий MP3 файл в base64 (0.1 сек тишины) - не требует внешнего файла
+      // Тихий MP3 файл в base64 (0.1 сек тишины)
       const SILENT_MP3 = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNAAAAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tQZB4P8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==";
+      
+      // iOS 17+ API для обхода silent mode
+      function setAudioSessionPlayback() {
+        try {
+          if (navigator.audioSession && navigator.audioSession.type !== undefined) {
+            navigator.audioSession.type = "playback";
+          }
+        } catch(e) {}
+      }
+      
+      // Вызываем сразу при загрузке
+      setAudioSessionPlayback();
       
       function onFirstInteraction(){
         if (unlockAttempted) return;
         unlockAttempted = true;
         
+        // Повторно устанавливаем playback при первом взаимодействии
+        setAudioSessionPlayback();
+        
         try{
           Sound.unlockAll();
         }catch(e){}
         
-        // Главный трюк для iOS silent mode:
-        // Запускаем тихий HTML5 Audio в loop - это переключает iOS
-        // с "ringer channel" на "media channel"
+        // Трюк для старых iOS: тихий HTML5 Audio в loop
         try {
           silentAudio = document.createElement("audio");
           silentAudio.setAttribute("x-webkit-airplay", "deny");
