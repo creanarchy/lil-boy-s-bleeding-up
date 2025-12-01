@@ -1,5 +1,45 @@
 try{ document.body.classList.add('preloading'); }catch(e){}
 
+// ========== TELEGRAM WEBAPP FULLSCREEN INIT ==========
+(function initTelegramFullscreen(){
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return;
+    
+    // Сообщаем Telegram что приложение готово
+    tg.ready();
+    
+    // Раскрываем на весь экран (обязательно!)
+    tg.expand();
+    
+    // Запрос полноэкранного режима (Telegram WebApp 8.0+)
+    if (typeof tg.requestFullscreen === 'function') {
+      tg.requestFullscreen();
+    }
+    
+    // Отключаем вертикальные свайпы, чтобы приложение не закрывалось случайно
+    if (typeof tg.disableVerticalSwipes === 'function') {
+      tg.disableVerticalSwipes();
+    }
+    
+    // Скрываем кнопку "Назад" если есть
+    if (tg.BackButton && typeof tg.BackButton.hide === 'function') {
+      tg.BackButton.hide();
+    }
+    
+    // Устанавливаем цвет хедера под цвет игры (опционально)
+    if (typeof tg.setHeaderColor === 'function') {
+      try { tg.setHeaderColor('#1a0000'); } catch(e){}
+    }
+    if (typeof tg.setBackgroundColor === 'function') {
+      try { tg.setBackgroundColor('#1a0000'); } catch(e){}
+    }
+    
+  } catch(e) {
+    console.warn('Telegram WebApp init error:', e);
+  }
+})();
+
 (function(){
   function setVH(){
     var vh = window.innerHeight * 0.01;
@@ -455,7 +495,7 @@ ctx.imageSmoothingEnabled = false;
   function fit(){ const r=wrap.getBoundingClientRect(); W=cvs.width=Math.round(r.width*DPR); H=cvs.height=Math.round(r.height*DPR); }
   new ResizeObserver(fit).observe(wrap); fit();
 
-  const tg = window.Telegram?.WebApp||null; if(tg){ try{ tg.ready(); tg.expand(); }catch(e){} }
+  const tg = window.Telegram?.WebApp||null;
 
   const hudH=document.getElementById('h'), hudDrops=document.getElementById('drops'), hudBest=document.getElementById('best');
   const bloodFill=document.getElementById('bloodFill');
