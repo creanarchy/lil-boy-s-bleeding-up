@@ -387,6 +387,13 @@ const wrap = document.getElementById('wrap');
   const imgSpring  = makeImg("./assets/images/platforms/platform_spring.png");
   const imgSpike   = makeImg("./assets/images/platforms/platform_spike.png");
   const imgBack = makeImg("./assets/images/backgrounds/back.png");
+
+  // Предзагрузка картинок стартового экрана (CSS background-image + HTML img)
+  makeImg("./assets/images/backgrounds/start.png");
+  makeImg("./assets/images/interface/Button.png");
+  makeImg("./assets/images/interface/sound_on.png");
+  makeImg("./assets/images/interface/sound_off.png");
+  makeImg("./assets/images/text/text_start.png");
   
   
   const imgSolid1 = makeImg("./assets/images/platforms/platform_solid1.png");
