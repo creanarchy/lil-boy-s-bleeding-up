@@ -274,12 +274,12 @@ const wrap = document.getElementById('wrap');
   })();
 
   // SFX: твердая/движущая, прыгучая, исчезающая, шипы, сбор капли, падение
-  Sound.load("solid",   "./assets/audio/solid.wav");
-  Sound.load("spring",  "./assets/audio/spring.wav");
-  Sound.load("fragile", "./assets/audio/fragile.wav");
-  Sound.load("spike",   "./assets/audio/spike.wav");
-  Sound.load("drop",    "./assets/audio/drop.wav");
-  Sound.load("falling", "./assets/audio/falling.wav");
+  Sound.load("solid",   "./assets/audio/solid.mp3");
+  Sound.load("spring",  "./assets/audio/spring.mp3");
+  Sound.load("fragile", "./assets/audio/fragile.mp3");
+  Sound.load("spike",   "./assets/audio/spike.mp3");
+  Sound.load("drop",    "./assets/audio/drop.mp3");
+  Sound.load("falling", "./assets/audio/falling.mp3");
 
   const imgFragile = makeImg("./assets/images/platforms/platform_fragile.png");
   const imgMoving  = makeImg("./assets/images/platforms/platform_moving.png");
