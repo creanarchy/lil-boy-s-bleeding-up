@@ -22,6 +22,10 @@ try{ document.body.classList.add('preloading'); }catch(e){}
       tg.disableVerticalSwipes();
     }
     
+    if (typeof tg.lockOrientation === 'function') {
+      tg.lockOrientation();
+    }
+    
     // Скрываем кнопку "Назад" если есть
     if (tg.BackButton && typeof tg.BackButton.hide === 'function') {
       tg.BackButton.hide();
