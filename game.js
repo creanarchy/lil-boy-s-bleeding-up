@@ -1323,7 +1323,11 @@ addDropOnPlatform(start, 0, 36);
       if (player.vy > 0 && withinXWrap(player.x, p) && prevFoot <= p.y && foot >= p.y){
         player.y = p.y - player.r;
         player.vy = (p.type==='spring' ? JUMP*1.6 : JUMP);
-        if (p.type==='spike'){ blood = Math.max(0, blood - 0.07); spawnBloodSplash(player.x, player.y); hitTimer=160; camKick=4; try{ navigator.vibrate(25);}catch(e){} }
+        if (p.type==='spike'){ blood = Math.max(0, blood - 0.07); spawnBloodSplash(player.x, player.y); hitTimer=160; camKick=4; try{ 
+        const tg = window.Telegram?.WebApp;
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        else navigator.vibrate(25); 
+      }catch(e){} }
         landed = true;
         landedType = p.type;
         if (p.type==='fragile' && !p.touched){ p.touched=true; p.ttl=600; }
