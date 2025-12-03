@@ -683,13 +683,13 @@
 }
 #menu::before{
 }
-#menu::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.42);z-index:0;pointer-events:none;}
+#menu::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.20);z-index:0;pointer-events:none;}
 #menu::before{
   content: "";
   position: absolute;
   inset: 0;
   background: url('./assets/images/backgrounds/start.png') center/cover no-repeat;
-  filter: brightness(0.50);
+  filter: brightness(0.80);
   opacity: 0.98;
   z-index: 0;
   pointer-events: none;

@@ -1040,7 +1040,7 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
       const _t = ring.main.type;
       const _h = VHEIGHT_SCALED[_t] || ring.main.h;
       let _w = ring.main.w;
-      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = (_t==='spring' ? widthFromAR(imgMoving, _h) : widthFromAR(_img, _h));} const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
+      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
     })();
       if (m.type==='spring'){ lastSpringAt = ringIndex; springRings.push(ringIndex); }
       addDropOnPlatform(m, ring.dropMain.x - (ring.main.x + ring.main.w/2), 28);
@@ -1049,7 +1049,7 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
       const _t = ring.side.type;
       const _h = VHEIGHT_SCALED[_t] || ring.side.h;
       let _w = ring.side.w;
-      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = (_t==='spring' ? widthFromAR(imgMoving, _h) : widthFromAR(_img, _h));} const __s = addPlatform(ring.side.x + ring.side.w/2, ring.side.y, _w, _h, _t, 0); return __s;
+      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __s = addPlatform(ring.side.x + ring.side.w/2, ring.side.y, _w, _h, _t, 0); return __s;
     })();
         if (s.type==='spike'){ lastSpikeAt = ringIndex; spikeRings.push(ringIndex); }
         if (false){
@@ -1161,7 +1161,7 @@ addDropOnPlatform(start, 0, 36);
       const _t = ring.main.type;
       const _h = VHEIGHT_SCALED[_t] || ring.main.h;
       let _w = ring.main.w;
-      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = (_t==='spring' ? widthFromAR(imgMoving, _h) : widthFromAR(_img, _h));}
+      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);}
       const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
     })();
       if (m.type==='spring'){ lastSpringAt = ringIndex; springRings.push(ringIndex); }
@@ -1171,7 +1171,7 @@ addDropOnPlatform(start, 0, 36);
       const _t = ring.side.type;
       const _h = VHEIGHT_SCALED[_t] || ring.side.h;
       let _w = ring.side.w;
-      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = (_t==='spring' ? widthFromAR(imgMoving, _h) : widthFromAR(_img, _h));}
+      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);}
       const __s = addPlatform(ring.side.x + ring.side.w/2, ring.side.y, _w, _h, _t, 0); return __s;
     })();
         if (s.type==='spike'){ lastSpikeAt = ringIndex; spikeRings.push(ringIndex); }
