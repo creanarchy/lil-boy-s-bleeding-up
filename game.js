@@ -1325,7 +1325,7 @@ addDropOnPlatform(start, 0, 36);
         player.vy = (p.type==='spring' ? JUMP*1.6 : JUMP);
         if (p.type==='spike'){ blood = Math.max(0, blood - 0.07); spawnBloodSplash(player.x, player.y); hitTimer=160; camKick=4; try{ 
         const tg = window.Telegram?.WebApp;
-        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
         else navigator.vibrate(25); 
       }catch(e){} }
         landed = true;
