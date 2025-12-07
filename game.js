@@ -681,32 +681,48 @@ async function saveRunToSupabase(){
     const tg = window.Telegram?.WebApp;
     const initData = tg?.initData;
     
-    if (!initData) {
-      console.warn('No Telegram initData');
+    // Если есть initData — используем защищённую функцию
+    if (initData) {
+      const response = await fetch(SUPABASE_URL + '/functions/v1/submit-score', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          initData: initData,
+          score: score || 0,
+          drops: dropsCollected || 0
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        console.error('Save error:', result.error);
+      }
       return;
     }
-
-    const response = await fetch(SUPABASE_URL + '/functions/v1/submit-score', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + SUPABASE_KEY
-      },
-      body: JSON.stringify({
-        initData: initData,
-        score: score || 0,
-        drops: dropsCollected || 0
-      })
+    
+    // Fallback — старый метод через rpc
+    const client = getSupabase();
+    if (!client) return;
+    await initPlayer();
+    if (!currentPlayer.telegram_id) return;
+    
+    const { data, error } = await client.rpc('submit_result', {
+      p_telegram_id: currentPlayer.telegram_id,
+      p_username: currentPlayer.username,
+      p_score: score || 0,
+      p_drops: dropsCollected || 0
     });
-
-    const result = await response.json();
-    if (result.error) {
-      console.error('Save error:', result.error);
+    
+    if (error) {
+      console.error('saveRun error', error);
     }
   } catch(e) {
     console.error('saveRunToSupabase error:', e);
   }
 }
+
 
 async function fetchLeaderboard(orderField){
   const client = getSupabase();
