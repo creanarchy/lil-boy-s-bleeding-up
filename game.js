@@ -698,6 +698,8 @@ async function saveRunToSupabase(){
         })
       });
       const result = await response.json();
+      console.log('DEBUG response status:', response.status);
+      console.log('DEBUG result:', result);
       if (result.error) {
         console.error('Save error:', result.error);
       }
