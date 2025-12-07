@@ -615,66 +615,24 @@ async function generateFallbackName(client){
 async function initPlayer(){
   if (playerInitPromise) return playerInitPromise;
   playerInitPromise = (async ()=>{
-    const client = getSupabase();
-    if (!client) return;
-
-    let username = null;
     try{
-      const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-      if (tgUser && tgUser.username){
-        username = String(tgUser.username);
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      if (tgUser && tgUser.id) {
+        currentPlayer.telegram_id = String(tgUser.id);
+        currentPlayer.username = tgUser.username || ('lilboy_' + String(tgUser.id).slice(-6));
+      } else {
+        currentPlayer.telegram_id = 'lilboy_' + Math.floor(100000 + Math.random()*900000);
+        currentPlayer.username = currentPlayer.telegram_id;
       }
-    }catch(e){
-      console.warn('Telegram user read error', e);
-    }
-
-    if (!username){
-      username = await generateFallbackName(client);
-    }
-
-    currentPlayer.telegram_id = username;
-    currentPlayer.username = username;
-
-    try{
-      const { data, error } = await client
-        .from('scores')
-        .select('telegram_id, username, score, total_drops')
-        .eq('telegram_id', username)
-        .maybeSingle();
-
-      if (error){
-        console.error('load player error', error);
-      }
-
-      if (!data){
-        const insertPayload = {
-          telegram_id: username,
-          username: username,
-          score: 0,
-          total_drops: 0,
-          game_id: 'lilboy_bleeding_up'
-        };
-        const { data: inserted, error: insertErr } = await client
-          .from('scores')
-          .insert(insertPayload)
-          .select('telegram_id, username, score, total_drops')
-          .single();
-        if (insertErr){
-          console.error('create player error', insertErr);
-        }else if (inserted){
-          currentPlayer.score = inserted.score || 0;
-          currentPlayer.total_drops = inserted.total_drops || 0;
-        }
-      }else{
-        currentPlayer.score = data.score || 0;
-        currentPlayer.total_drops = data.total_drops || 0;
-      }
-    }catch(e){
-      console.error('initPlayer fatal', e);
+    } catch(e) {
+      console.error('initPlayer error:', e);
+      currentPlayer.telegram_id = 'lilboy_' + Math.floor(100000 + Math.random()*900000);
+      currentPlayer.username = currentPlayer.telegram_id;
     }
   })();
   return playerInitPromise;
 }
+
 
 async function saveRunToSupabase(){
   try{
