@@ -683,29 +683,28 @@ async function saveRunToSupabase(){
     await initPlayer();
     if (!currentPlayer.telegram_id) return;
 
-    const currentBest = Number(currentPlayer.score || 0);
     const runScore = Number(score || 0);
-    const newBestScore = Math.max(currentBest, runScore);
     const addedDrops = Number(dropsCollected || 0);
-    const newTotalDrops = Number(currentPlayer.total_drops || 0) + addedDrops;
 
-    const { data, error } = await client
-      .from('scores')
-      .update({
-        score: newBestScore,
-        total_drops: newTotalDrops
-      })
-      .eq('telegram_id', currentPlayer.telegram_id)
-      .select('score, total_drops')
-      .single();
+    const { data, error } = await client.rpc('submit_result', {
+      p_telegram_id: currentPlayer.telegram_id,
+      p_username: currentPlayer.username,
+      p_score: runScore,
+      p_drops: addedDrops
+    });
 
     if (error){
       console.error('saveRun error', error);
       return;
     }
 
-    currentPlayer.score = (data && data.score) != null ? data.score : newBestScore;
-    currentPlayer.total_drops = (data && data.total_drops) != null ? data.total_drops : newTotalDrops;
+    try{
+      const row = Array.isArray(data) ? (data[0] || null) : data;
+      if (row && typeof row === 'object'){
+        if (row.score != null) currentPlayer.score = Number(row.score) || 0;
+        if (row.total_drops != null) currentPlayer.total_drops = Number(row.total_drops) || 0;
+      }
+    }catch(_){}
   }catch(e){
     console.error('saveRunToSupabase fatal', e);
   }
