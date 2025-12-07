@@ -680,6 +680,8 @@ async function saveRunToSupabase(){
   try{
     const tg = window.Telegram?.WebApp;
     const initData = tg?.initData;
+    console.log('DEBUG tg:', tg);
+    console.log('DEBUG initData:', initData);
     
     // Если есть initData — используем защищённую функцию
     if (initData) {
