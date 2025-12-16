@@ -1017,7 +1017,11 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
       let _w = ring.main.w;
       if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
     })();
-      if (m.type==='spring'){ lastSpringAt = ringIndex; springRings.push(ringIndex); }
+      if (m.type==='spring'){ 
+  lastSpringAt = ringIndex; 
+  springRings.push(ringIndex); 
+  if (springRings.length > 20) springRings.shift();
+}
       addDropOnPlatform(m, ring.dropMain.x - (ring.main.x + ring.main.w/2), 28);
       if (ring.side){
         const s = (function(){
@@ -1026,7 +1030,11 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
       let _w = ring.side.w;
       if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __s = addPlatform(ring.side.x + ring.side.w/2, ring.side.y, _w, _h, _t, 0); return __s;
     })();
-        if (s.type==='spike'){ lastSpikeAt = ringIndex; spikeRings.push(ringIndex); }
+        if (s.type==='spike'){ 
+  lastSpikeAt = ringIndex; 
+  spikeRings.push(ringIndex); 
+  if (spikeRings.length > 20) spikeRings.shift();
+}
         if (false){
           const rx = s.x + s.w/2 + ((Math.random()<0.5?-1:1) * (W*0.18));
           const ry = s.y - stepY*0.75;
@@ -1139,7 +1147,11 @@ addDropOnPlatform(start, 0, 36);
       if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);}
       const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
     })();
-      if (m.type==='spring'){ lastSpringAt = ringIndex; springRings.push(ringIndex); }
+      if (m.type==='spring'){ 
+  lastSpringAt = ringIndex; 
+  springRings.push(ringIndex); 
+  if (springRings.length > 20) springRings.shift();
+}
       addDropOnPlatform(m, ring.dropMain.x - (ring.main.x + ring.main.w/2), 28);
       if (ring.side){
         const s = (function(){
@@ -1149,7 +1161,11 @@ addDropOnPlatform(start, 0, 36);
       if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);}
       const __s = addPlatform(ring.side.x + ring.side.w/2, ring.side.y, _w, _h, _t, 0); return __s;
     })();
-        if (s.type==='spike'){ lastSpikeAt = ringIndex; spikeRings.push(ringIndex); }
+        if (s.type==='spike'){ 
+  lastSpikeAt = ringIndex; 
+  spikeRings.push(ringIndex); 
+  if (spikeRings.length > 20) spikeRings.shift();
+}
         if (false){
           const rx = s.x + s.w/2 + ((Math.random()<0.5?-1:1) * (W*0.18));
           const ry = s.y - stepY*0.75;
