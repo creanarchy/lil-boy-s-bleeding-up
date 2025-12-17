@@ -855,7 +855,7 @@ const imgPlayerRed = new Image(); imgPlayerRed.src = './assets/images/lil boy/li
 
   
   const G=3200*1.15, VX_MAX=440*1.15, SMOOTH=9;
-  const JUMP = (IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250) * 1.15;  
+  const JUMP = (IS_MOBILE ? Math.round(-1250*(1.20 * Math.sqrt(1.10))) : -1250) * 1.25;  
   const T_UP=Math.abs(JUMP/G), PEAK=(JUMP*JUMP)/(2*G), REACH_Y=PEAK*0.8, FLIGHT=2*T_UP;
   let MAX_DX = VX_MAX * FLIGHT * 0.8;
   const VEL_THRESH = IS_MOBILE ? 80*1.15 : 80; 
