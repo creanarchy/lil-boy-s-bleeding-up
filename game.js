@@ -983,7 +983,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
       }
 topY      = Math.min(topY, cy);
       if (r(6) < 0.78) dropSide = {x: cx2 + (r(7)-0.5)*w2*0.35, y: cy - 36, r:18};
-      if (clampShiftSide !== 0) dropSide.x += clampShiftSide;
+      if (dropSide && clampShiftSide !== 0) dropSide.x += clampShiftSide;
     }
 
     
