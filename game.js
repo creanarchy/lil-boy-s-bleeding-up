@@ -1008,19 +1008,22 @@ const dropMain = {x: cx + (r(8)-0.5)*(wMain*0.35), y: y - 36, r:18};
     return {main, side:sidePlat, dropMain, dropSide, topY, mainCx: main.x + main.w*0.5};
   }
 
-  function spawnAheadIfNeeded(){
-    while (worldTopY > (cameraY - H*0.8)){
-      const ring = genRing(SEED, ringIndex, ringTopY, lastMainX);
-      const m = (function(){
-      const _t = ring.main.type;
-      const _h = VHEIGHT_SCALED[_t] || ring.main.h;
-      let _w = ring.main.w;
-      if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
-    })();
-      if (m.type==='spring'){ 
-  lastSpringAt = ringIndex; 
-  springRings.push(ringIndex); 
-  if (springRings.length > 20) springRings.shift();
+ function spawnAheadIfNeeded(){
+  let safeGuard = 0;
+  while (worldTopY > (cameraY - H*0.8)){
+    safeGuard++;
+    if (safeGuard > 50) break;
+    const ring = genRing(SEED, ringIndex, ringTopY, lastMainX);
+    const m = (function(){
+    const _t = ring.main.type;
+    const _h = VHEIGHT_SCALED[_t] || ring.main.h;
+    let _w = ring.main.w;
+    if (_t!=='solid'){ const _img = (_t==='fragile')?imgFragile: (_t==='moving')?imgMoving: (_t==='spring')?imgSpring: (_t==='spike')?imgSpike: null; if (_img && imgReady(_img)) _w = widthFromAR(_img, _h);} const __m = addPlatform(ring.main.x + ring.main.w/2, ring.main.y, _w, _h, _t, ring.main.vx||0); return __m;
+  })();
+    if (m.type==='spring'){ 
+lastSpringAt = ringIndex; 
+springRings.push(ringIndex); 
+if (springRings.length > 20) springRings.shift();
 }
       addDropOnPlatform(m, ring.dropMain.x - (ring.main.x + ring.main.w/2), 28);
       if (ring.side){
