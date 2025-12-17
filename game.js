@@ -948,7 +948,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     const dx      = (0.35 + r(1)*0.5) * MAX_DX * dxScale * side;
     const cx      = clamp(lastX + dx, 0.02*W, 0.98*W);
 
-    const wMain   = lerp(0.36*W, 0.36*W, clamp(n/50,0,1)) * lerp(1.0, 0.92, t);
+    const wMain   = lerp(0.36*W, 0.36*W, clamp(n/50,0,1));
     const pFrag   = lerp(0.15, 0.50, t);
     const pMove   = (n>=12) ? lerp(0.05, 0.28, t) : 0.0;
     const rPick   = r(2);
