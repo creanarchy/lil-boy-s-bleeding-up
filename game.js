@@ -969,7 +969,7 @@ function diffT(n){ return clamp((n-6)/70, 0, 1); }
     let topY = y, sidePlat = null, dropSide = null, clampShiftSide = 0;
 
     if (r(3) < (n<4 ? 0.40 : 0.58)){
-      const w2  = lerp(0.24*W, 0.15*W, clamp(n/50,0,1));
+      const w2  = lerp(0.24*W, 0.24*W, clamp(n/50,0,1));
       const cx2 = clamp(cx + (r(4)-0.5)*MAX_DX*0.95, 0.02*W, 0.98*W);
       const cy  = y - lerp(stepY*0.38, stepY*0.58, r(5));
       sidePlat  = {x:cx2 - w2/2, y:cy, w:w2, h:18, type:'solid', vx:0};
